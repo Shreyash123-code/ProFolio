@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.title }} — Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'JetBrains Mono', monospace; background: #0d1117; color: #c9d1d9; line-height: 1.7; }
+        a { text-decoration: none; color: inherit; }
+        ::selection { background: #1a7f37; color: #fff; }
+
+        .nav { max-width: 1000px; margin: 0 auto; padding: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-size: 1rem; font-weight: 700; color: #58a6ff; }
+        .nav-logo::before { content: '~/'; color: #8b949e; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { font-size: 0.8rem; font-weight: 500; color: #8b949e; transition: color 0.2s; }
+        .nav-links a:hover { color: #3fb950; }
+        .nav-links a::before { content: './'; color: #484f58; }
+
+        .hero { max-width: 1000px; margin: 0 auto; padding: 4rem 2rem 3rem; display: flex; align-items: flex-start; gap: 4rem; }
+        .hero-text { flex: 1; }
+        .hero-comment { color: #484f58; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .hero-greeting { color: #3fb950; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .hero-name { font-size: 2.75rem; font-weight: 800; color: #f0f6fc; line-height: 1.2; margin-bottom: 0.5rem; }
+        .hero-tagline { font-size: 1rem; color: #58a6ff; margin-bottom: 1.5rem; }
+        .hero-bio { font-size: 0.9rem; color: #8b949e; max-width: 520px; margin-bottom: 2rem; }
+        .hero-image { width: 200px; height: 200px; border-radius: 12px; overflow: hidden; flex-shrink: 0; border: 2px solid #30363d; }
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; }
+        .social-links { display: flex; gap: 0.75rem; }
+        .social-links a { height: 36px; padding: 0 1rem; border-radius: 6px; background: #21262d; border: 1px solid #30363d; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.8rem; color: #c9d1d9; transition: all 0.2s; }
+        .social-links a:hover { border-color: #58a6ff; color: #58a6ff; }
+
+        .terminal-block { max-width: 1000px; margin: 2rem auto; padding: 0 2rem; }
+        .terminal { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+        .terminal-header { background: #21262d; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .terminal-dot.r { background: #f85149; } .terminal-dot.y { background: #d29922; } .terminal-dot.g { background: #3fb950; }
+        .terminal-title { font-size: 0.7rem; color: #484f58; margin-left: auto; }
+        .terminal-body { padding: 1.25rem; font-size: 0.85rem; }
+        .terminal-line { margin-bottom: 0.3rem; }
+        .terminal-prompt { color: #3fb950; }
+        .terminal-cmd { color: #c9d1d9; }
+        .terminal-output { color: #8b949e; padding-left: 1rem; }
+        .terminal-key { color: #ff7b72; }
+        .terminal-val { color: #a5d6ff; }
+        .terminal-str { color: #3fb950; }
+
+        .skills-section { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        .section-title { font-size: 0.8rem; font-weight: 700; color: #8b949e; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem; }
+        .section-title::before { content: '## '; color: #484f58; }
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .skill-tag { padding: 0.35rem 0.9rem; background: #21262d; border: 1px solid #30363d; color: #3fb950; border-radius: 20px; font-size: 0.75rem; font-weight: 500; transition: all 0.2s; }
+        .skill-tag:hover { border-color: #3fb950; background: rgba(63,185,80,0.1); }
+
+        .projects-section { max-width: 1000px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+        .projects-grid { display: grid; gap: 1rem; }
+        .project-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; transition: all 0.3s; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start; }
+        .project-card:hover { border-color: #58a6ff; }
+        .project-title { font-size: 1.1rem; font-weight: 700; color: #58a6ff; margin-bottom: 0.4rem; }
+        .project-desc { font-size: 0.8rem; color: #8b949e; margin-bottom: 0.75rem; }
+        .project-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+        .project-tag { padding: 0.15rem 0.5rem; background: rgba(56,139,253,0.1); border: 1px solid rgba(56,139,253,0.2); color: #58a6ff; border-radius: 20px; font-size: 0.65rem; }
+        .project-link { font-size: 0.75rem; color: #3fb950; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .project-lang { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #8b949e; }
+        .project-lang::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #3fb950; }
+        .project-image { display: none; }
+
+        .contact-section { max-width: 1000px; margin: 0 auto; padding: 3rem 2rem; }
+        .contact-block { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 2rem; text-align: center; }
+        .contact-email { color: #58a6ff; font-weight: 600; font-size: 1rem; }
+        .contact-email:hover { text-decoration: underline; }
+
+        .footer { max-width: 1000px; margin: 0 auto; padding: 1.5rem 2rem; border-top: 1px solid #21262d; display: flex; justify-content: space-between; font-size: 0.7rem; color: #484f58; }
+
+        .no-projects { text-align: center; padding: 3rem; color: #484f58; font-style: italic; }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; padding: 2rem 1.5rem; gap: 2rem; }
+            .hero-image { width: 150px; height: 150px; }
+            .hero-name { font-size: 2rem; }
+            .project-card { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">{{ portfolio.user.username }}</div>
+        <ul class="nav-links">
+            <li><a href="#about">about</a></li>
+            <li><a href="#projects">projects</a></li>
+            <li><a href="#contact">contact</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="about">
+        <div class="hero-text">
+            <p class="hero-comment">// Welcome to my portfolio</p>
+            <p class="hero-greeting">$ whoami</p>
+            <h1 class="hero-name">{{ portfolio.title|default:"Your Name" }}</h1>
+            {% if portfolio.tagline %}<p class="hero-tagline">{{ portfolio.tagline }}</p>{% endif %}
+            <p class="hero-bio">{{ portfolio.bio|default:"" }}</p>
+            <div class="social-links">
+                {% if portfolio.github_link %}<a href="{{ portfolio.github_link }}" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>{% endif %}
+                {% if portfolio.linkedin_link %}<a href="{{ portfolio.linkedin_link }}" target="_blank"><i class="fa-brands fa-linkedin-in"></i> LinkedIn</a>{% endif %}
+                {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}"><i class="fa-solid fa-envelope"></i> Email</a>{% endif %}
+            </div>
+        </div>
+        {% if portfolio.profile_image %}
+        <div class="hero-image">
+            <img src="{{ portfolio.profile_image.url }}" alt="{{ portfolio.title }}">
+        </div>
+        {% endif %}
+    </section>
+
+    <div class="terminal-block">
+        <div class="terminal">
+            <div class="terminal-header">
+                <span class="terminal-dot r"></span><span class="terminal-dot y"></span><span class="terminal-dot g"></span>
+                <span class="terminal-title">portfolio.json</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-cmd">cat portfolio.json</span></div>
+                <div class="terminal-line terminal-output">{</div>
+                <div class="terminal-line terminal-output">&nbsp;&nbsp;<span class="terminal-key">"name"</span>: <span class="terminal-str">"{{ portfolio.title }}"</span>,</div>
+                {% if portfolio.tagline %}<div class="terminal-line terminal-output">&nbsp;&nbsp;<span class="terminal-key">"role"</span>: <span class="terminal-str">"{{ portfolio.tagline }}"</span>,</div>{% endif %}
+                <div class="terminal-line terminal-output">&nbsp;&nbsp;<span class="terminal-key">"status"</span>: <span class="terminal-str">"Available for hire"</span></div>
+                <div class="terminal-line terminal-output">}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if portfolio.skills %}
+    <section class="skills-section">
+        <h2 class="section-title">tech_stack</h2>
+        <div class="skills-grid">
+            {% for skill in portfolio.skills_list %}
+            <span class="skill-tag">{{ skill }}</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="projects-section" id="projects">
+        <h2 class="section-title">repositories</h2>
+        <div class="projects-grid">
+            {% for project in projects %}
+            <a href="{{ project.link|default:'#' }}" target="_blank" class="project-card">
+                <div>
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    <p class="project-desc">{{ project.description }}</p>
+                    {% if project.technology_tags %}
+                    <div class="project-tags">
+                        {% for tag in project.tags_list %}
+                        <span class="project-tag">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if project.link %}<span class="project-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> View repo</span>{% endif %}
+                </div>
+                <div class="project-lang">Code</div>
+            </a>
+            {% empty %}
+            <p class="no-projects">// No repositories found. Push your first project!</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if portfolio.email %}
+    <section class="contact-section" id="contact">
+        <h2 class="section-title">contact</h2>
+        <div class="contact-block">
+            <p style="color: #8b949e; margin-bottom: 1rem; font-size: 0.85rem;">$ echo "Let's build something together"</p>
+            <a href="mailto:{{ portfolio.email }}" class="contact-email">{{ portfolio.email }}</a>
+        </div>
+    </section>
+    {% endif %}
+
+    <footer class="footer">
+        <p>&copy; {% now "Y" %} {{ portfolio.user.username }} — All rights reserved</p>
+        <p>Built with ProFolio v1.0</p>
+    </footer>
+</body>
+</html>

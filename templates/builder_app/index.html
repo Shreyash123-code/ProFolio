@@ -1,0 +1,478 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProFolio — Professional Portfolio Builder</title>
+    <meta name="description" content="Build stunning professional portfolios with ProFolio. Choose from 6 beautiful templates and export as website or PDF.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar" id="main-navbar">
+        <div class="nav-left">
+            <div class="logo-icon">P</div>
+            <h1>ProFolio</h1>
+        </div>
+        <div class="nav-right">
+            {% if request.user.is_authenticated %}
+                <span class="user-badge"><i class="fa-solid fa-circle-user"></i> {{ request.user.username }}</span>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ghost btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                </form>
+            {% endif %}
+            <button type="button" id="btn-save-draft" class="btn-secondary"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
+
+            <!-- View Live Dropdown -->
+            <div class="dropdown" id="view-live-dropdown">
+                <button type="button" class="btn-primary dropdown-trigger" id="btn-view-live">
+                    <i class="fa-solid fa-rocket"></i> View Live <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="dropdown-item">
+                        <i class="fa-solid fa-globe"></i>
+                        <div>
+                            <span class="dropdown-item-title">View Website</span>
+                            <span class="dropdown-item-desc">Open live portfolio in new tab</span>
+                        </div>
+                    </a>
+                    <a href="{% url 'download_pdf' %}" class="dropdown-item">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <div>
+                            <span class="dropdown-item-title">Download PDF</span>
+                            <span class="dropdown-item-desc">Get a downloadable PDF version</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Messages -->
+    {% if messages %}
+    <div class="toast-container" id="toast-container">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags|default:'info' }}">
+            <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+            <span>{{ message }}</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="tabs">
+                <button class="tab active" data-target="section-content"><i class="fa-solid fa-pen-to-square"></i> Content</button>
+                <button class="tab" data-target="section-projects"><i class="fa-solid fa-diagram-project"></i> Projects</button>
+                <button class="tab" data-target="section-design"><i class="fa-solid fa-palette"></i> Design</button>
+                <button class="tab" data-target="section-settings"><i class="fa-solid fa-gear"></i> Settings</button>
+            </div>
+
+            <form method="POST" action="{% url 'index' %}" enctype="multipart/form-data" id="portfolio-form" class="form-container">
+                {% csrf_token %}
+                <input type="hidden" name="theme" id="input-theme" value="{{ portfolio.theme|default:'light' }}">
+                <input type="hidden" name="template" id="input-template" value="{{ portfolio.template|default:'starter' }}">
+
+                <!-- ═══════ CONTENT TAB ═══════ -->
+                <section class="form-section" id="section-content" style="display:block;">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-user"></i> Basic Information</h2>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-profile-image">Profile Photo</label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <div class="file-upload-preview">
+                                <img id="file-preview-img" src="{% if portfolio.profile_image %}{{ portfolio.profile_image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E{% endif %}" alt="Profile">
+                            </div>
+                            <div class="file-upload-text">
+                                <span class="file-upload-label">Click to upload</span>
+                                <span class="file-upload-hint">JPG, PNG up to 5MB</span>
+                            </div>
+                            <input type="file" name="profile_image" id="input-profile-image" accept="image/*">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-title"><i class="fa-solid fa-heading"></i> Full Name / Title</label>
+                        <input type="text" name="title" id="input-title" value="{{ portfolio.title|default:'' }}" placeholder="e.g. Jane Doe — Designer & Developer">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-tagline"><i class="fa-solid fa-quote-left"></i> Tagline</label>
+                        <input type="text" name="tagline" id="input-tagline" value="{{ portfolio.tagline|default:'' }}" placeholder="e.g. Full-Stack Developer | UI/UX Enthusiast">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-bio"><i class="fa-solid fa-align-left"></i> Bio</label>
+                        <textarea name="bio" id="input-bio" rows="4" placeholder="Write a compelling introduction about yourself...">{{ portfolio.bio|default:'' }}</textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-skills"><i class="fa-solid fa-code"></i> Skills <span class="label-hint">(comma-separated)</span></label>
+                        <input type="text" name="skills" id="input-skills" value="{{ portfolio.skills|default:'' }}" placeholder="e.g. Python, React, Django, Figma, AWS">
+                    </div>
+
+                    <div class="section-header" style="margin-top: 1.5rem;">
+                        <h2><i class="fa-solid fa-link"></i> Social & Contact</h2>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-email"><i class="fa-solid fa-envelope"></i> Contact Email</label>
+                        <input type="email" name="email" id="input-email" value="{{ portfolio.email|default:'' }}" placeholder="hello@example.com">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-github"><i class="fa-brands fa-github"></i> GitHub URL</label>
+                        <input type="url" name="github_link" id="input-github" value="{{ portfolio.github_link|default:'' }}" placeholder="https://github.com/username">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="input-linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn URL</label>
+                        <input type="url" name="linkedin_link" id="input-linkedin" value="{{ portfolio.linkedin_link|default:'' }}" placeholder="https://linkedin.com/in/username">
+                    </div>
+                </section>
+
+                <!-- ═══════ DESIGN TAB ═══════ -->
+                <section class="form-section" id="section-design" style="display:none;">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-swatchbook"></i> Choose Template</h2>
+                        <p class="section-desc">Select a template for your portfolio website</p>
+                    </div>
+
+                    <div class="template-grid">
+                        <div class="template-card {% if portfolio.template == 'starter' or not portfolio.template %}selected{% endif %}" data-template="starter">
+                            <div class="template-preview tp-starter">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Starter</span>
+                                <span class="template-desc">Clean & minimal</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'gradient_aurora' %}selected{% endif %}" data-template="gradient_aurora">
+                            <div class="template-preview tp-aurora">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Gradient Aurora</span>
+                                <span class="template-desc">Dark & vibrant</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'minimal_mono' %}selected{% endif %}" data-template="minimal_mono">
+                            <div class="template-preview tp-mono">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Minimal Mono</span>
+                                <span class="template-desc">Typography-focused</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'creative_splash' %}selected{% endif %}" data-template="creative_splash">
+                            <div class="template-preview tp-splash">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Creative Splash</span>
+                                <span class="template-desc">Bold & playful</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'elegant' %}selected{% endif %}" data-template="elegant">
+                            <div class="template-preview tp-elegant">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Elegant</span>
+                                <span class="template-desc">Warm editorial</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'developer' %}selected{% endif %}" data-template="developer">
+                            <div class="template-preview tp-developer">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines">
+                                        <div class="tp-line tp-line-lg"></div>
+                                        <div class="tp-line tp-line-md"></div>
+                                        <div class="tp-line tp-line-sm"></div>
+                                    </div>
+                                    <div class="tp-circle"></div>
+                                </div>
+                                <div class="tp-cards">
+                                    <div class="tp-card"></div>
+                                    <div class="tp-card"></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Developer</span>
+                                <span class="template-desc">Terminal aesthetic</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══════ SETTINGS TAB ═══════ -->
+                <section class="form-section" id="section-settings" style="display:none;">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-circle-info"></i> Portfolio Status</h2>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="status-badge status-live"><i class="fa-solid fa-circle"></i> Live</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Public URL</span>
+                            <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="info-link">
+                                /p/{{ portfolio.custom_url|default:request.user.username }}/
+                            </a>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Template</span>
+                            <span class="info-value">{{ portfolio.get_template_display|default:"Starter" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Projects</span>
+                            <span class="info-value">{{ projects.count }} project{{ projects.count|pluralize }}</span>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin-top: 2rem;">
+                        <h2><i class="fa-solid fa-download"></i> Export</h2>
+                    </div>
+                    <div class="export-grid">
+                        <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="export-card">
+                            <i class="fa-solid fa-globe"></i>
+                            <span class="export-title">View Website</span>
+                            <span class="export-desc">Open in browser</span>
+                        </a>
+                        <a href="{% url 'download_pdf' %}" class="export-card">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span class="export-title">Download PDF</span>
+                            <span class="export-desc">Save as PDF file</span>
+                        </a>
+                    </div>
+                </section>
+            </form>
+
+            <!-- ═══════ PROJECTS TAB (outside main form) ═══════ -->
+            <section class="form-section" id="section-projects" style="display:none;">
+                <div class="form-container">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-plus-circle"></i> Add Project</h2>
+                    </div>
+
+                    <form method="POST" action="{% url 'add_project' %}" enctype="multipart/form-data" id="project-form">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <label for="project-title"><i class="fa-solid fa-bookmark"></i> Project Title</label>
+                            <input type="text" name="project_title" id="project-title" placeholder="e.g. E-Commerce Dashboard" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="project-desc"><i class="fa-solid fa-align-left"></i> Description</label>
+                            <textarea name="project_description" id="project-desc" rows="3" placeholder="Brief description of the project..."></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label for="project-link"><i class="fa-solid fa-link"></i> Project URL</label>
+                            <input type="url" name="project_link" id="project-link" placeholder="https://github.com/...">
+                        </div>
+                        <div class="input-group">
+                            <label for="project-tags"><i class="fa-solid fa-tags"></i> Tech Tags <span class="label-hint">(comma-separated)</span></label>
+                            <input type="text" name="project_tags" id="project-tags" placeholder="e.g. React, Node.js, MongoDB">
+                        </div>
+                        <div class="input-group">
+                            <label for="project-image"><i class="fa-solid fa-image"></i> Project Image</label>
+                            <input type="file" name="project_image" id="project-image" accept="image/*" class="file-input">
+                        </div>
+                        <button type="submit" class="btn-primary btn-full"><i class="fa-solid fa-plus"></i> Add Project</button>
+                    </form>
+
+                    <!-- Existing Projects -->
+                    {% if projects %}
+                    <div class="section-header" style="margin-top: 2rem;">
+                        <h2><i class="fa-solid fa-layer-group"></i> Your Projects ({{ projects.count }})</h2>
+                    </div>
+                    <div class="project-list">
+                        {% for project in projects %}
+                        <div class="project-list-item">
+                            <div class="project-list-info">
+                                {% if project.image %}
+                                <img src="{{ project.image.url }}" alt="{{ project.title }}" class="project-list-thumb">
+                                {% else %}
+                                <div class="project-list-thumb project-list-thumb-empty">
+                                    <i class="fa-solid fa-image"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="project-list-name">{{ project.title }}</div>
+                                    {% if project.technology_tags %}
+                                    <div class="project-list-tags">{{ project.technology_tags }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <form method="POST" action="{% url 'delete_project' project.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-delete" onclick="return confirm('Delete this project?');">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </aside>
+
+        <!-- ═══════ PREVIEW AREA ═══════ -->
+        <section class="preview-area">
+            <div id="browser-window" class="browser-window">
+                <div class="browser-header">
+                    <div class="browser-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <div class="browser-url">
+                        <i class="fa-solid fa-lock"></i>
+                        <span id="preview-url">{{ portfolio.custom_url|default:request.user.username }}.profolio.me</span>
+                    </div>
+                </div>
+                <div class="browser-content" id="preview-content">
+                    <!-- Preview Nav -->
+                    <nav class="preview-nav">
+                        <div id="preview-logo" class="preview-logo">{{ portfolio.user.get_full_name|default:portfolio.user.username }}.</div>
+                        <ul>
+                            <li>About</li>
+                            <li>Projects</li>
+                            <li>Contact</li>
+                        </ul>
+                    </nav>
+
+                    <!-- Preview Hero -->
+                    <div class="preview-hero">
+                        <div class="preview-hero-text">
+                            <p class="greeting">Hi there, I'm</p>
+                            <h1 id="preview-title" class="name">{{ portfolio.title|default:"Your Name & Title" }}</h1>
+                            <p id="preview-tagline" class="tagline-preview">{{ portfolio.tagline|default:"Your tagline goes here" }}</p>
+                            <p id="preview-bio" class="bio">{{ portfolio.bio|default:"Write a short introduction about yourself." }}</p>
+                            <div class="preview-social">
+                                <a id="preview-github" href="{{ portfolio.github_link|default:'#' }}"><i class="fa-brands fa-github"></i></a>
+                                <a id="preview-linkedin" href="{{ portfolio.linkedin_link|default:'#' }}"><i class="fa-brands fa-linkedin-in"></i></a>
+                                <span id="preview-email-icon" style="{% if not portfolio.email %}display:none;{% endif %}"><a href="mailto:{{ portfolio.email }}"><i class="fa-solid fa-envelope"></i></a></span>
+                            </div>
+                        </div>
+                        <div class="preview-photo">
+                            <img id="preview-image" src="{% if portfolio.profile_image %}{{ portfolio.profile_image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E{% endif %}" alt="Profile">
+                        </div>
+                    </div>
+
+                    <!-- Preview Skills -->
+                    <div class="preview-skills" id="preview-skills" style="{% if not portfolio.skills %}display:none;{% endif %}">
+                        <h3>Skills</h3>
+                        <div class="preview-skills-list" id="preview-skills-list">
+                            {% for skill in portfolio.skills_list %}
+                            <span class="preview-skill-tag">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Preview Projects -->
+                    <div class="preview-projects">
+                        <h3>Projects</h3>
+                        <div class="preview-projects-grid">
+                            {% for project in projects %}
+                            <div class="preview-project-card">
+                                <div class="preview-project-img">
+                                    {% if project.image %}<img src="{{ project.image.url }}" alt="{{ project.title }}">{% endif %}
+                                </div>
+                                <div class="preview-project-info">
+                                    <h4>{{ project.title }}</h4>
+                                    <p>{{ project.description|truncatewords:12 }}</p>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <p class="preview-empty">Add projects to see them here</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

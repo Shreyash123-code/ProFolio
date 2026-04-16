@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.title }} — Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Space Grotesk', sans-serif; background: #fafafa; color: #111; line-height: 1.7; }
+        a { text-decoration: none; color: inherit; }
+
+        .nav { max-width: 900px; margin: 0 auto; padding: 3rem 2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-size: 1.25rem; font-weight: 700; color: #000; }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a { font-size: 0.8rem; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 1.5px; transition: color 0.2s; }
+        .nav-links a:hover { color: #000; }
+
+        .hero { max-width: 900px; margin: 0 auto; padding: 6rem 2rem 5rem; display: flex; align-items: flex-start; gap: 4rem; }
+        .hero-text { flex: 1; }
+        .hero-greeting { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; color: #aaa; margin-bottom: 1.5rem; }
+        .hero-name { font-size: 4rem; font-weight: 700; color: #000; line-height: 1.05; margin-bottom: 0.75rem; letter-spacing: -2px; }
+        .hero-tagline { font-size: 1.1rem; color: #666; margin-bottom: 1.5rem; font-weight: 400; }
+        .hero-bio { font-size: 1rem; color: #555; max-width: 500px; margin-bottom: 2.5rem; }
+        .hero-image { width: 220px; height: 220px; overflow: hidden; flex-shrink: 0; }
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: filter 0.4s; }
+        .hero-image:hover img { filter: grayscale(0%); }
+        .social-links { display: flex; gap: 1.5rem; }
+        .social-links a { font-size: 1.1rem; color: #999; transition: color 0.2s; }
+        .social-links a:hover { color: #000; }
+
+        .divider { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+        .divider hr { border: none; border-top: 1px solid #e0e0e0; }
+
+        .skills-section { max-width: 900px; margin: 0 auto; padding: 3rem 2rem; }
+        .section-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; color: #aaa; margin-bottom: 2rem; }
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .skill-tag { padding: 0.4rem 1rem; border: 1px solid #ddd; color: #333; border-radius: 0; font-size: 0.8rem; font-weight: 500; transition: all 0.2s; }
+        .skill-tag:hover { background: #000; color: #fff; border-color: #000; }
+
+        .projects-section { max-width: 900px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+        .projects-grid { display: grid; gap: 0; }
+        .project-card { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #e0e0e0; padding: 2.5rem 0; transition: background 0.2s; }
+        .project-card:last-child { border-bottom: 1px solid #e0e0e0; }
+        .project-card:hover { background: #f5f5f5; }
+        .project-left { padding-right: 2rem; }
+        .project-title { font-size: 1.5rem; font-weight: 700; color: #000; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+        .project-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+        .project-tag { font-size: 0.7rem; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .project-right {}
+        .project-desc { font-size: 0.9rem; color: #666; margin-bottom: 1rem; }
+        .project-link { font-size: 0.8rem; font-weight: 600; color: #000; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .project-link:hover { gap: 0.8rem; }
+        .project-image { display: none; }
+
+        .contact-section { max-width: 900px; margin: 0 auto; padding: 5rem 2rem; }
+        .contact-email { font-size: 2rem; font-weight: 700; color: #000; letter-spacing: -1px; border-bottom: 2px solid #000; padding-bottom: 4px; transition: opacity 0.2s; }
+        .contact-email:hover { opacity: 0.6; }
+
+        .footer { max-width: 900px; margin: 0 auto; padding: 2rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
+        .no-projects { text-align: center; padding: 3rem; color: #aaa; font-style: italic; }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; padding: 3rem 1.5rem; gap: 2rem; }
+            .hero-image { width: 160px; height: 160px; }
+            .hero-name { font-size: 2.5rem; }
+            .project-card { grid-template-columns: 1fr; }
+            .project-left { padding-right: 0; margin-bottom: 1rem; }
+            .contact-email { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">{{ portfolio.user.get_full_name|default:portfolio.user.username }}</div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#projects">Work</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="about">
+        <div class="hero-text">
+            <p class="hero-greeting">Portfolio</p>
+            <h1 class="hero-name">{{ portfolio.title|default:"Your Name" }}</h1>
+            {% if portfolio.tagline %}<p class="hero-tagline">{{ portfolio.tagline }}</p>{% endif %}
+            <p class="hero-bio">{{ portfolio.bio|default:"" }}</p>
+            <div class="social-links">
+                {% if portfolio.github_link %}<a href="{{ portfolio.github_link }}" target="_blank"><i class="fa-brands fa-github"></i></a>{% endif %}
+                {% if portfolio.linkedin_link %}<a href="{{ portfolio.linkedin_link }}" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>{% endif %}
+                {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}"><i class="fa-solid fa-envelope"></i></a>{% endif %}
+            </div>
+        </div>
+        {% if portfolio.profile_image %}
+        <div class="hero-image">
+            <img src="{{ portfolio.profile_image.url }}" alt="{{ portfolio.title }}">
+        </div>
+        {% endif %}
+    </section>
+
+    {% if portfolio.skills %}
+    <div class="divider"><hr></div>
+    <section class="skills-section">
+        <h2 class="section-title">Expertise</h2>
+        <div class="skills-grid">
+            {% for skill in portfolio.skills_list %}
+            <span class="skill-tag">{{ skill }}</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="divider"><hr></div>
+    <section class="projects-section" id="projects">
+        <h2 class="section-title">Selected Work</h2>
+        <div class="projects-grid">
+            {% for project in projects %}
+            <a href="{{ project.link|default:'#' }}" target="_blank" class="project-card">
+                <div class="project-left">
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    {% if project.technology_tags %}
+                    <div class="project-tags">
+                        {% for tag in project.tags_list %}
+                        <span class="project-tag">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="project-right">
+                    <p class="project-desc">{{ project.description }}</p>
+                    {% if project.link %}<span class="project-link">View → </span>{% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <p class="no-projects">No projects added yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if portfolio.email %}
+    <div class="divider"><hr></div>
+    <section class="contact-section" id="contact">
+        <h2 class="section-title">Get in touch</h2>
+        <a href="mailto:{{ portfolio.email }}" class="contact-email">{{ portfolio.email }}</a>
+    </section>
+    {% endif %}
+
+    <footer class="footer">
+        <p>&copy; {% now "Y" %} {{ portfolio.user.get_full_name|default:portfolio.user.username }}</p>
+        <p>Built with ProFolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.title }} — Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Source Sans 3', sans-serif; background: #faf8f5; color: #3d3425; line-height: 1.8; }
+        a { text-decoration: none; color: inherit; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .nav { max-width: 1000px; margin: 0 auto; padding: 2.5rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: #2c1810; }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a { font-size: 0.85rem; font-weight: 500; color: #a08060; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+        .nav-links a:hover { color: #8b6914; }
+
+        .hero { max-width: 1000px; margin: 0 auto; padding: 5rem 2rem 4rem; display: flex; align-items: center; gap: 5rem; }
+        .hero-text { flex: 1; }
+        .hero-greeting { color: #8b6914; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.75rem; letter-spacing: 2px; text-transform: uppercase; }
+        .hero-name { font-size: 3.5rem; font-weight: 700; color: #2c1810; line-height: 1.15; margin-bottom: 0.75rem; }
+        .hero-tagline { font-size: 1.2rem; color: #a08060; font-style: italic; margin-bottom: 1.5rem; }
+        .hero-bio { font-size: 1.05rem; color: #6b5a47; max-width: 480px; margin-bottom: 2rem; }
+        .hero-image { width: 300px; height: 370px; overflow: hidden; flex-shrink: 0; border-radius: 200px 200px 20px 20px; box-shadow: 0 30px 60px rgba(44,24,16,0.1); }
+        .hero-image img { width: 100%; height: 100%; object-fit: cover; }
+        .social-links { display: flex; gap: 1.25rem; }
+        .social-links a { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid #d4c5b0; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #a08060; transition: all 0.3s; }
+        .social-links a:hover { background: #8b6914; color: white; border-color: #8b6914; }
+
+        .ornament { text-align: center; padding: 2rem 0; color: #d4c5b0; font-size: 1.5rem; letter-spacing: 8px; }
+
+        .skills-section { max-width: 1000px; margin: 0 auto; padding: 2rem 2rem 3rem; }
+        .section-title { font-size: 2rem; color: #2c1810; margin-bottom: 1.5rem; }
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .skill-tag { padding: 0.5rem 1.25rem; background: transparent; border: 1px solid #d4c5b0; color: #8b6914; border-radius: 50px; font-size: 0.85rem; font-weight: 500; transition: all 0.3s; }
+        .skill-tag:hover { background: #8b6914; color: white; border-color: #8b6914; }
+
+        .projects-section { background: #f3ede5; padding: 5rem 0; }
+        .projects-container { max-width: 1000px; margin: 0 auto; padding: 0 2rem; }
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
+        .project-card { background: #faf8f5; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(44,24,16,0.06); transition: all 0.4s; }
+        .project-card:hover { transform: translateY(-4px); box-shadow: 0 15px 40px rgba(44,24,16,0.1); }
+        .project-image { width: 100%; height: 200px; background: linear-gradient(135deg, #d4c5b0, #8b6914); overflow: hidden; }
+        .project-image img { width: 100%; height: 100%; object-fit: cover; }
+        .project-body { padding: 1.75rem; }
+        .project-title { font-size: 1.25rem; color: #2c1810; margin-bottom: 0.5rem; }
+        .project-desc { font-size: 0.9rem; color: #8a7a68; margin-bottom: 1rem; }
+        .project-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .project-tag { padding: 0.2rem 0.6rem; background: #f3ede5; color: #8b6914; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .project-link { color: #8b6914; font-weight: 600; font-size: 0.85rem; }
+
+        .contact-section { max-width: 1000px; margin: 0 auto; padding: 5rem 2rem; text-align: center; }
+        .contact-section .section-title { text-align: center; }
+        .contact-email { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #8b6914; font-weight: 600; font-style: italic; }
+        .contact-email:hover { text-decoration: underline; }
+
+        .footer { max-width: 1000px; margin: 0 auto; padding: 2rem; border-top: 1px solid #e8ddd0; display: flex; justify-content: space-between; font-size: 0.8rem; color: #b8a790; }
+
+        .no-projects { text-align: center; padding: 3rem; color: #b8a790; font-style: italic; grid-column: 1 / -1; }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column-reverse; text-align: center; gap: 2rem; padding: 3rem 1.5rem; }
+            .hero-image { width: 220px; height: 280px; }
+            .social-links { justify-content: center; }
+            .nav { flex-direction: column; gap: 1rem; }
+            .hero-name { font-size: 2.5rem; }
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">{{ portfolio.user.get_full_name|default:portfolio.user.username }}</div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#projects">Portfolio</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="about">
+        <div class="hero-text">
+            <p class="hero-greeting">Welcome</p>
+            <h1 class="hero-name">{{ portfolio.title|default:"Your Name" }}</h1>
+            {% if portfolio.tagline %}<p class="hero-tagline">{{ portfolio.tagline }}</p>{% endif %}
+            <p class="hero-bio">{{ portfolio.bio|default:"" }}</p>
+            <div class="social-links">
+                {% if portfolio.github_link %}<a href="{{ portfolio.github_link }}" target="_blank"><i class="fa-brands fa-github"></i></a>{% endif %}
+                {% if portfolio.linkedin_link %}<a href="{{ portfolio.linkedin_link }}" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>{% endif %}
+                {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}"><i class="fa-solid fa-envelope"></i></a>{% endif %}
+            </div>
+        </div>
+        {% if portfolio.profile_image %}
+        <div class="hero-image">
+            <img src="{{ portfolio.profile_image.url }}" alt="{{ portfolio.title }}">
+        </div>
+        {% endif %}
+    </section>
+
+    <div class="ornament">✦ ✦ ✦</div>
+
+    {% if portfolio.skills %}
+    <section class="skills-section">
+        <h2 class="section-title">Areas of Expertise</h2>
+        <div class="skills-grid">
+            {% for skill in portfolio.skills_list %}
+            <span class="skill-tag">{{ skill }}</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="projects-section" id="projects">
+        <div class="projects-container">
+            <h2 class="section-title">Selected Works</h2>
+            <div class="projects-grid">
+                {% for project in projects %}
+                <a href="{{ project.link|default:'#' }}" target="_blank" class="project-card">
+                    <div class="project-image">
+                        {% if project.image %}<img src="{{ project.image.url }}" alt="{{ project.title }}">{% endif %}
+                    </div>
+                    <div class="project-body">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <p class="project-desc">{{ project.description }}</p>
+                        {% if project.technology_tags %}
+                        <div class="project-tags">
+                            {% for tag in project.tags_list %}
+                            <span class="project-tag">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if project.link %}<span class="project-link">View Details →</span>{% endif %}
+                    </div>
+                </a>
+                {% empty %}
+                <p class="no-projects">No works added yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {% if portfolio.email %}
+    <div class="ornament">✦ ✦ ✦</div>
+    <section class="contact-section" id="contact">
+        <h2 class="section-title">Let's Work Together</h2>
+        <p style="color: #a08060; margin-bottom: 1.5rem; font-style: italic;">I'd love to hear from you</p>
+        <a href="mailto:{{ portfolio.email }}" class="contact-email">{{ portfolio.email }}</a>
+    </section>
+    {% endif %}
+
+    <footer class="footer">
+        <p>&copy; {% now "Y" %} {{ portfolio.user.get_full_name|default:portfolio.user.username }}</p>
+        <p>Built with ProFolio</p>
+    </footer>
+</body>
+</html>
