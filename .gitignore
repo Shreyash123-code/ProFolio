@@ -10,6 +10,7 @@ media/
 .env
 
 # Virtual Environment
+shreya/
 venv/
 env/
 ENV/

@@ -1,13 +1,21 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
-from builder_app.models import Portfolio
+from builder_app.models import Portfolio, TEMPLATE_CHOICES
 import io
 
 def portfolio_view(request, custom_url):
     portfolio = get_object_or_404(Portfolio, custom_url=custom_url)
     projects = portfolio.projects.all().order_by('-created_at')
     
-    template_name = f'viewer/templates/{portfolio.template}.html'
+    template_to_use = portfolio.template
+    preview_template = request.GET.get('preview_template')
+    
+    if preview_template and request.user.is_authenticated and request.user == portfolio.user:
+        valid_templates = [choice[0] for choice in TEMPLATE_CHOICES]
+        if preview_template in valid_templates:
+            template_to_use = preview_template
+            
+    template_name = f'viewer/templates/{template_to_use}.html'
     
     return render(request, template_name, {
         'portfolio': portfolio,

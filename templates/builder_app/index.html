@@ -331,7 +331,7 @@
             <section class="form-section" id="section-projects" style="display:none;">
                 <div class="form-container">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-plus-circle"></i> Add Project</h2>
+                        <h2><i class="fa-solid fa-plus-circle"></i> <span id="project-form-title">Add New Project</span></h2>
                     </div>
 
                     <form method="POST" action="{% url 'add_project' %}" enctype="multipart/form-data" id="project-form">
@@ -356,7 +356,10 @@
                             <label for="project-image"><i class="fa-solid fa-image"></i> Project Image</label>
                             <input type="file" name="project_image" id="project-image" accept="image/*" class="file-input">
                         </div>
-                        <button type="submit" class="btn-primary btn-full"><i class="fa-solid fa-plus"></i> Add Project</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn-primary btn-full" id="btn-submit-project"><i class="fa-solid fa-plus"></i> Add Project</button>
+                            <button type="button" class="btn-ghost btn-full" id="btn-cancel-edit" style="display: none; border: 1.5px solid var(--slate-200); border-radius: 8px;" onclick="cancelEditProject()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                        </div>
                     </form>
 
                     <!-- Existing Projects -->
@@ -366,7 +369,7 @@
                     </div>
                     <div class="project-list">
                         {% for project in projects %}
-                        <div class="project-list-item">
+                        <div class="project-list-item" id="project-item-{{ project.id }}">
                             <div class="project-list-info">
                                 {% if project.image %}
                                 <img src="{{ project.image.url }}" alt="{{ project.title }}" class="project-list-thumb">
@@ -382,12 +385,21 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <form method="POST" action="{% url 'delete_project' project.id %}" class="inline-form">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-delete" onclick="return confirm('Delete this project?');">
-                                    <i class="fa-solid fa-trash-can"></i>
+                            <div class="project-actions">
+                                <button type="button" class="btn-action btn-action-edit"
+                                    onclick="editProject('{{ project.id }}', '{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.link|escapejs }}', '{{ project.technology_tags|escapejs }}', '{% url 'edit_project' project.id %}')"
+                                    title="Edit project">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
                                 </button>
-                            </form>
+                                <button type="button" class="btn-action btn-action-delete"
+                                    onclick="confirmDeleteProject('{{ project.id }}', '{{ project.title|escapejs }}')"
+                                    title="Delete project">
+                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                </button>
+                                <form method="POST" action="{% url 'delete_project' project.id %}" id="delete-form-{{ project.id }}" style="display:none;">
+                                    {% csrf_token %}
+                                </form>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
@@ -395,6 +407,8 @@
                 </div>
             </section>
         </aside>
+
+
 
         <!-- ═══════ PREVIEW AREA ═══════ -->
         <section class="preview-area">
@@ -472,6 +486,19 @@
             </div>
         </section>
     </main>
+
+    <!-- ═══════ DELETE CONFIRMATION MODAL ═══════ -->
+    <div class="modal-overlay" id="delete-modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="modal-title">Delete Project?</h3>
+            <p class="modal-desc" id="modal-project-name">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button type="button" class="btn-modal-confirm" id="btn-confirm-delete"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            </div>
+        </div>
+    </div>
 
     <script src="{% static 'js/main.js' %}"></script>
 </body>

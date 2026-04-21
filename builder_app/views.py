@@ -6,6 +6,12 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 import io
 
+
+def redirect_to_projects():
+    """Redirect to index with projects tab active."""
+    from django.urls import reverse
+    return redirect(reverse('index') + '?tab=projects')
+
 @login_required(login_url='/users/login/')
 def index(request):
     portfolio, created = Portfolio.objects.get_or_create(user=request.user)
@@ -40,18 +46,40 @@ def index(request):
 def add_project(request):
     if request.method == 'POST':
         portfolio = get_object_or_404(Portfolio, user=request.user)
-        project = Project(
-            portfolio=portfolio,
-            title=request.POST.get('project_title', ''),
-            description=request.POST.get('project_description', ''),
-            link=request.POST.get('project_link', ''),
-            technology_tags=request.POST.get('project_tags', ''),
-        )
+        project = Project(portfolio=portfolio)
+            
+        project.title = request.POST.get('project_title', '')
+        project.description = request.POST.get('project_description', '')
+        project.link = request.POST.get('project_link', '')
+        project.technology_tags = request.POST.get('project_tags', '')
+        
         if 'project_image' in request.FILES:
             project.image = request.FILES['project_image']
+            
         project.save()
-        messages.success(request, f'Project "{project.title}" added!')
-    return redirect('index')
+        messages.success(request, f'Project "{project.title}" added successfully!')
+    return redirect_to_projects()
+
+
+@login_required(login_url='/users/login/')
+def edit_project(request, project_id):
+    if request.method == 'POST':
+        portfolio = get_object_or_404(Portfolio, user=request.user)
+        project = get_object_or_404(Project, id=project_id, portfolio=portfolio)
+
+        title = request.POST.get('project_title', '').strip()
+        if title:  # title is required
+            project.title = title
+        project.description = request.POST.get('project_description', '')
+        project.link = request.POST.get('project_link', '')
+        project.technology_tags = request.POST.get('project_tags', '')
+
+        if 'project_image' in request.FILES:
+            project.image = request.FILES['project_image']
+
+        project.save()
+        messages.success(request, f'Project "{project.title}" updated successfully!')
+    return redirect_to_projects()
 
 
 @login_required(login_url='/users/login/')
@@ -59,9 +87,10 @@ def delete_project(request, project_id):
     if request.method == 'POST':
         portfolio = get_object_or_404(Portfolio, user=request.user)
         project = get_object_or_404(Project, id=project_id, portfolio=portfolio)
+        title = project.title
         project.delete()
-        messages.success(request, 'Project deleted.')
-    return redirect('index')
+        messages.success(request, f'Project "{title}" deleted successfully.')
+    return redirect_to_projects()
 
 
 @login_required(login_url='/users/login/')
