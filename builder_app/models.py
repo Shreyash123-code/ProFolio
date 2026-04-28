@@ -30,7 +30,15 @@ class Portfolio(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.custom_url:
-            self.custom_url = slugify(self.user.username)
+            base_slug = slugify(self.user.username)
+            slug = base_slug
+            # Ensure uniqueness: if another portfolio already has this slug, append the user pk
+            qs = Portfolio.objects.filter(custom_url=slug)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                slug = f"{base_slug}-{self.user.pk}"
+            self.custom_url = slug
         super().save(*args, **kwargs)
 
     def skills_list(self):
