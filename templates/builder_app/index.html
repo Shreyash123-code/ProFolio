@@ -1,31 +1,48 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProFolio — Professional Portfolio Builder</title>
-    <meta name="description" content="Build stunning professional portfolios with ProFolio. Choose from 6 beautiful templates and export as website or PDF.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>ProFolio — AI-Powered Portfolio Generator</title>
+    <meta name="description"
+        content="Create, customize, preview, and publish professional AI-powered portfolios with ProFolio.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
     <!-- Navbar -->
     <header class="navbar" id="main-navbar">
         <div class="nav-left">
-            <div class="logo-icon">P</div>
-            <h1>ProFolio</h1>
+            <div class="logo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="logo-text">
+                <h1>ProFolio</h1>
+                <span class="version-badge">AI 2.0</span>
+            </div>
         </div>
         <div class="nav-right">
+            <button type="button" class="btn-ai-shortcut" id="btn-ai-modal-open">
+                <i class="fa-solid fa-sparkles"></i> AI Assistant
+            </button>
+            <button type="button" class="btn-resume-import" id="btn-resume-modal-open">
+                <i class="fa-solid fa-file-pdf"></i> Import Resume
+            </button>
+
             {% if request.user.is_authenticated %}
-                <span class="user-badge"><i class="fa-solid fa-circle-user"></i> {{ request.user.username }}</span>
-                <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-ghost btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
-                </form>
+            <span class="user-badge"><i class="fa-solid fa-circle-user"></i> {{ request.user.username }}</span>
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-ghost btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+            </form>
             {% endif %}
-            <button type="button" id="btn-save-draft" class="btn-secondary"><i class="fa-solid fa-cloud-arrow-up"></i> Save</button>
+
+            <button type="button" id="btn-save-draft" class="btn-secondary">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Save
+            </button>
 
             <!-- View Live Dropdown -->
             <div class="dropdown" id="view-live-dropdown">
@@ -33,18 +50,19 @@
                     <i class="fa-solid fa-rocket"></i> View Live <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
                 </button>
                 <div class="dropdown-menu" id="dropdown-menu">
-                    <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="dropdown-item">
+                    <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank"
+                        class="dropdown-item">
                         <i class="fa-solid fa-globe"></i>
                         <div>
-                            <span class="dropdown-item-title">View Website</span>
-                            <span class="dropdown-item-desc">Open live portfolio in new tab</span>
+                            <span class="dropdown-item-title">Open Portfolio Website</span>
+                            <span class="dropdown-item-desc">/p/{{ portfolio.custom_url|default:request.user.username }}/</span>
                         </div>
                     </a>
-                    <a href="{% url 'download_pdf' %}" class="dropdown-item">
-                        <i class="fa-solid fa-file-pdf"></i>
+                    <a href="{% url 'export_portfolio_zip' %}" class="dropdown-item">
+                        <i class="fa-solid fa-file-zipper"></i>
                         <div>
-                            <span class="dropdown-item-title">Download PDF</span>
-                            <span class="dropdown-item-desc">Get a downloadable PDF version</span>
+                            <span class="dropdown-item-title">Export Static ZIP</span>
+                            <span class="dropdown-item-desc">Download ready-to-deploy HTML package</span>
                         </div>
                     </a>
                 </div>
@@ -67,34 +85,41 @@
 
     <!-- Main Workspace -->
     <main class="workspace">
-        <!-- Left Sidebar -->
+        <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="tabs">
-                <button class="tab active" data-target="section-content"><i class="fa-solid fa-pen-to-square"></i> Content</button>
-                <button class="tab" data-target="section-projects"><i class="fa-solid fa-diagram-project"></i> Projects</button>
-                <button class="tab" data-target="section-design"><i class="fa-solid fa-palette"></i> Design</button>
-                <button class="tab" data-target="section-settings"><i class="fa-solid fa-gear"></i> Settings</button>
+                <button type="button" class="tab active" data-target="section-content"><i class="fa-solid fa-user-pen"></i> Content</button>
+                <button type="button" class="tab" data-target="section-projects"><i class="fa-solid fa-cubes"></i> Projects</button>
+                <button type="button" class="tab" data-target="section-design"><i class="fa-solid fa-palette"></i> Design</button>
+                <button type="button" class="tab" data-target="section-export"><i class="fa-solid fa-share-nodes"></i> Export & Deploy</button>
             </div>
 
+            <!-- Main Portfolio Form -->
             <form method="POST" action="{% url 'index' %}" enctype="multipart/form-data" id="portfolio-form" class="form-container">
                 {% csrf_token %}
+                <input type="hidden" name="active_tab" id="active_tab" value="content">
                 <input type="hidden" name="theme" id="input-theme" value="{{ portfolio.theme|default:'light' }}">
-                <input type="hidden" name="template" id="input-template" value="{{ portfolio.template|default:'starter' }}">
+                <input type="hidden" name="template" id="input-template" value="{{ portfolio.template|default:'minimal_developer' }}">
+                <input type="hidden" name="accent_color" id="input-accent-color" value="{{ portfolio.accent_color|default:'#6366f1' }}">
+                <input type="hidden" name="font_family" id="input-font-family" value="{{ portfolio.font_family|default:'Inter' }}">
+                <input type="hidden" name="animation_style" id="input-animation-style" value="{{ portfolio.animation_style|default:'fade' }}">
 
                 <!-- ═══════ CONTENT TAB ═══════ -->
                 <section class="form-section" id="section-content" style="display:block;">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-user"></i> Basic Information</h2>
+                        <h2><i class="fa-solid fa-id-card"></i> Personal Information</h2>
                     </div>
 
                     <div class="input-group">
                         <label for="input-profile-image">Profile Photo</label>
                         <div class="file-upload-area" id="file-upload-area">
                             <div class="file-upload-preview">
-                                <img id="file-preview-img" src="{% if portfolio.profile_image %}{{ portfolio.profile_image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E{% endif %}" alt="Profile">
+                                <img id="file-preview-img"
+                                    src="{% if portfolio.profile_image %}{{ portfolio.profile_image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E{% endif %}"
+                                    alt="Profile">
                             </div>
                             <div class="file-upload-text">
-                                <span class="file-upload-label">Click to upload</span>
+                                <span class="file-upload-label">Click to upload photo</span>
                                 <span class="file-upload-hint">JPG, PNG up to 5MB</span>
                             </div>
                             <input type="file" name="profile_image" id="input-profile-image" accept="image/*">
@@ -102,270 +127,458 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="input-title"><i class="fa-solid fa-heading"></i> Full Name / Title</label>
-                        <input type="text" name="title" id="input-title" value="{{ portfolio.title|default:'' }}" placeholder="e.g. Jane Doe — Designer & Developer">
+                        <label for="input-title"><i class="fa-solid fa-user"></i> Full Name</label>
+                        <input type="text" name="title" id="input-title" value="{{ portfolio.title|default:'' }}"
+                            placeholder="e.g. Alex Morgan">
                     </div>
 
                     <div class="input-group">
-                        <label for="input-tagline"><i class="fa-solid fa-quote-left"></i> Tagline</label>
-                        <input type="text" name="tagline" id="input-tagline" value="{{ portfolio.tagline|default:'' }}" placeholder="e.g. Full-Stack Developer | UI/UX Enthusiast">
+                        <label for="input-professional-title"><i class="fa-solid fa-briefcase"></i> Professional Title</label>
+                        <input type="text" name="professional_title" id="input-professional-title" value="{{ portfolio.professional_title|default:'' }}"
+                            placeholder="e.g. Senior Full-Stack Engineer / AI Researcher">
                     </div>
 
                     <div class="input-group">
-                        <label for="input-bio"><i class="fa-solid fa-align-left"></i> Bio</label>
-                        <textarea name="bio" id="input-bio" rows="4" placeholder="Write a compelling introduction about yourself...">{{ portfolio.bio|default:'' }}</textarea>
+                        <label for="input-tagline"><i class="fa-solid fa-quote-left"></i> Headline / Tagline</label>
+                        <input type="text" name="tagline" id="input-tagline" value="{{ portfolio.tagline|default:'' }}"
+                            placeholder="e.g. Building scalable web systems & cloud applications">
                     </div>
 
                     <div class="input-group">
-                        <label for="input-skills"><i class="fa-solid fa-code"></i> Skills <span class="label-hint">(comma-separated)</span></label>
-                        <input type="text" name="skills" id="input-skills" value="{{ portfolio.skills|default:'' }}" placeholder="e.g. Python, React, Django, Figma, AWS">
-                    </div>
-
-                    <div class="section-header" style="margin-top: 1.5rem;">
-                        <h2><i class="fa-solid fa-link"></i> Social & Contact</h2>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="input-email"><i class="fa-solid fa-envelope"></i> Contact Email</label>
-                        <input type="email" name="email" id="input-email" value="{{ portfolio.email|default:'' }}" placeholder="hello@example.com">
+                        <div class="label-with-action">
+                            <label for="input-bio"><i class="fa-solid fa-align-left"></i> About / Bio</label>
+                            <button type="button" class="btn-ai-inline" onclick="openAiGeneratorFor('about', 'input-bio')"><i class="fa-solid fa-sparkles"></i> AI Generate</button>
+                        </div>
+                        <textarea name="bio" id="input-bio" rows="4"
+                            placeholder="Write a short compelling summary about your background, expertise, and career goals...">{{ portfolio.bio|default:'' }}</textarea>
                     </div>
 
                     <div class="input-group">
-                        <label for="input-github"><i class="fa-brands fa-github"></i> GitHub URL</label>
-                        <input type="url" name="github_link" id="input-github" value="{{ portfolio.github_link|default:'' }}" placeholder="https://github.com/username">
+                        <div class="label-with-action">
+                            <label for="input-skills"><i class="fa-solid fa-code"></i> Technology Skills <span class="label-hint">(comma-separated)</span></label>
+                            <button type="button" class="btn-ai-inline" onclick="openAiGeneratorFor('skills_suggestion', 'input-skills')"><i class="fa-solid fa-wand-magic-sparkles"></i> Suggest Skills</button>
+                        </div>
+                        <input type="text" name="skills" id="input-skills" value="{{ portfolio.skills|default:'' }}"
+                            placeholder="e.g. Python, Django, React, TypeScript, Docker, AWS, PostgreSQL">
+                    </div>
+
+                    <div class="section-header" style="margin-top: 2rem;">
+                        <h2><i class="fa-solid fa-address-book"></i> Contact & Social Links</h2>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label for="input-email"><i class="fa-solid fa-envelope"></i> Email</label>
+                            <input type="email" name="email" id="input-email" value="{{ portfolio.email|default:'' }}" placeholder="alex@example.com">
+                        </div>
+                        <div class="input-group">
+                            <label for="input-phone"><i class="fa-solid fa-phone"></i> Phone</label>
+                            <input type="text" name="phone" id="input-phone" value="{{ portfolio.phone|default:'' }}" placeholder="+1 (555) 019-2834">
+                        </div>
                     </div>
 
                     <div class="input-group">
-                        <label for="input-linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn URL</label>
-                        <input type="url" name="linkedin_link" id="input-linkedin" value="{{ portfolio.linkedin_link|default:'' }}" placeholder="https://linkedin.com/in/username">
+                        <label for="input-location"><i class="fa-solid fa-location-dot"></i> Location</label>
+                        <input type="text" name="location" id="input-location" value="{{ portfolio.location|default:'' }}" placeholder="San Francisco, CA">
                     </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label for="input-github"><i class="fa-brands fa-github"></i> GitHub URL</label>
+                            <input type="url" name="github_link" id="input-github" value="{{ portfolio.github_link|default:'' }}" placeholder="https://github.com/username">
+                        </div>
+                        <div class="input-group">
+                            <label for="input-linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn URL</label>
+                            <input type="url" name="linkedin_link" id="input-linkedin" value="{{ portfolio.linkedin_link|default:'' }}" placeholder="https://linkedin.com/in/username">
+                        </div>
+                    </div>
+
+                    <div class="input-grid-2">
+                        <div class="input-group">
+                            <label for="input-twitter"><i class="fa-brands fa-x-twitter"></i> Twitter / X</label>
+                            <input type="url" name="twitter_link" id="input-twitter" value="{{ portfolio.twitter_link|default:'' }}" placeholder="https://twitter.com/username">
+                        </div>
+                        <div class="input-group">
+                            <label for="input-website"><i class="fa-solid fa-globe"></i> Website Link</label>
+                            <input type="url" name="website_link" id="input-website" value="{{ portfolio.website_link|default:'' }}" placeholder="https://yourwebsite.com">
+                        </div>
+                    </div>
+
+                    <!-- ══════ EDUCATION SECTION ══════ -->
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-graduation-cap"></i> Education</h2>
+                    </div>
+                    <div class="sub-form-card">
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label>Degree</label>
+                                <input type="text" id="edu-degree" placeholder="e.g. B.S. Computer Science">
+                            </div>
+                            <div class="input-group">
+                                <label>College / University</label>
+                                <input type="text" id="edu-college" placeholder="e.g. Stanford University">
+                            </div>
+                        </div>
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label>Year / Duration</label>
+                                <input type="text" id="edu-year" placeholder="e.g. 2020 - 2024">
+                            </div>
+                            <div class="input-group">
+                                <label>CGPA / Grade</label>
+                                <input type="text" id="edu-cgpa" placeholder="e.g. 3.9 / 4.0">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary btn-sm" onclick="submitEducation()"><i class="fa-solid fa-plus"></i> Add Education</button>
+                    </div>
+
+                    {% if educations %}
+                    <div class="items-list">
+                        {% for edu in educations %}
+                        <div class="item-card">
+                            <div>
+                                <div class="item-card-title">{{ edu.degree }}</div>
+                                <div class="item-card-sub">{{ edu.college }} • {{ edu.year }} {% if edu.cgpa %}(CGPA: {{ edu.cgpa }}){% endif %}</div>
+                            </div>
+                            <form action="{% url 'delete_education' edu.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-icon-danger" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- ══════ EXPERIENCE SECTION ══════ -->
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-briefcase"></i> Work Experience</h2>
+                    </div>
+                    <div class="sub-form-card">
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label>Company Name</label>
+                                <input type="text" id="exp-company" placeholder="e.g. Google / Acme Corp">
+                            </div>
+                            <div class="input-group">
+                                <label>Role / Position</label>
+                                <input type="text" id="exp-role" placeholder="e.g. Software Engineer Intern">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Duration</label>
+                            <input type="text" id="exp-duration" placeholder="e.g. Jan 2023 - Present">
+                        </div>
+                        <div class="input-group">
+                            <label>Description</label>
+                            <textarea id="exp-description" rows="2" placeholder="Key responsibilities and achievements..."></textarea>
+                        </div>
+                        <button type="button" class="btn-secondary btn-sm" onclick="submitExperience()"><i class="fa-solid fa-plus"></i> Add Experience</button>
+                    </div>
+
+                    {% if experiences %}
+                    <div class="items-list">
+                        {% for exp in experiences %}
+                        <div class="item-card">
+                            <div>
+                                <div class="item-card-title">{{ exp.role }} @ {{ exp.company }}</div>
+                                <div class="item-card-sub">{{ exp.duration }}</div>
+                                <p style="font-size:0.8rem; color:var(--slate-500); margin-top:0.3rem;">{{ exp.description }}</p>
+                            </div>
+                            <form action="{% url 'delete_experience' exp.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-icon-danger" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- ══════ CERTIFICATES SECTION ══════ -->
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-certificate"></i> Certificates & Awards</h2>
+                    </div>
+                    <div class="sub-form-card">
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label>Certificate Name</label>
+                                <input type="text" id="cert-name" placeholder="e.g. AWS Certified Solutions Architect">
+                            </div>
+                            <div class="input-group">
+                                <label>Issuing Organization</label>
+                                <input type="text" id="cert-org" placeholder="e.g. Amazon Web Services">
+                            </div>
+                        </div>
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label>Year</label>
+                                <input type="text" id="cert-year" placeholder="e.g. 2023">
+                            </div>
+                            <div class="input-group">
+                                <label>Credential URL</label>
+                                <input type="url" id="cert-link" placeholder="https://coursera.org/verify/...">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-secondary btn-sm" onclick="submitCertificate()"><i class="fa-solid fa-plus"></i> Add Certificate</button>
+                    </div>
+
+                    {% if certificates %}
+                    <div class="items-list">
+                        {% for cert in certificates %}
+                        <div class="item-card">
+                            <div>
+                                <div class="item-card-title">{{ cert.name }}</div>
+                                <div class="item-card-sub">{{ cert.organization }} • {{ cert.year }}</div>
+                            </div>
+                            <form action="{% url 'delete_certificate' cert.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-icon-danger" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </section>
 
                 <!-- ═══════ DESIGN TAB ═══════ -->
                 <section class="form-section" id="section-design" style="display:none;">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-swatchbook"></i> Choose Template</h2>
-                        <p class="section-desc">Select a template for your portfolio website</p>
+                        <h2><i class="fa-solid fa-swatchbook"></i> Select Portfolio Template</h2>
+                        <p class="section-desc">Choose from 5 new high-impact professional design layouts</p>
                     </div>
 
                     <div class="template-grid">
-                        <div class="template-card {% if portfolio.template == 'starter' or not portfolio.template %}selected{% endif %}" data-template="starter">
-                            <div class="template-preview tp-starter">
-                                <div class="tp-nav"></div>
-                                <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
-                                </div>
-                            </div>
-                            <div class="template-info">
-                                <span class="template-name">Starter</span>
-                                <span class="template-desc">Clean & minimal</span>
-                            </div>
-                        </div>
-
-                        <div class="template-card {% if portfolio.template == 'gradient_aurora' %}selected{% endif %}" data-template="gradient_aurora">
-                            <div class="template-preview tp-aurora">
-                                <div class="tp-nav"></div>
-                                <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
-                                </div>
-                            </div>
-                            <div class="template-info">
-                                <span class="template-name">Gradient Aurora</span>
-                                <span class="template-desc">Dark & vibrant</span>
-                            </div>
-                        </div>
-
-                        <div class="template-card {% if portfolio.template == 'minimal_mono' %}selected{% endif %}" data-template="minimal_mono">
-                            <div class="template-preview tp-mono">
-                                <div class="tp-nav"></div>
-                                <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
-                                </div>
-                            </div>
-                            <div class="template-info">
-                                <span class="template-name">Minimal Mono</span>
-                                <span class="template-desc">Typography-focused</span>
-                            </div>
-                        </div>
-
-                        <div class="template-card {% if portfolio.template == 'creative_splash' %}selected{% endif %}" data-template="creative_splash">
-                            <div class="template-preview tp-splash">
-                                <div class="tp-nav"></div>
-                                <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
-                                </div>
-                            </div>
-                            <div class="template-info">
-                                <span class="template-name">Creative Splash</span>
-                                <span class="template-desc">Bold & playful</span>
-                            </div>
-                        </div>
-
-                        <div class="template-card {% if portfolio.template == 'elegant' %}selected{% endif %}" data-template="elegant">
-                            <div class="template-preview tp-elegant">
-                                <div class="tp-nav"></div>
-                                <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
-                                </div>
-                            </div>
-                            <div class="template-info">
-                                <span class="template-name">Elegant</span>
-                                <span class="template-desc">Warm editorial</span>
-                            </div>
-                        </div>
-
-                        <div class="template-card {% if portfolio.template == 'developer' %}selected{% endif %}" data-template="developer">
+                        <div class="template-card {% if portfolio.template == 'minimal_developer' or not portfolio.template %}selected{% endif %}" data-template="minimal_developer">
+                            <div class="template-badge">Popular</div>
                             <div class="template-preview tp-developer">
                                 <div class="tp-nav"></div>
                                 <div class="tp-hero">
-                                    <div class="tp-lines">
-                                        <div class="tp-line tp-line-lg"></div>
-                                        <div class="tp-line tp-line-md"></div>
-                                        <div class="tp-line tp-line-sm"></div>
-                                    </div>
-                                    <div class="tp-circle"></div>
-                                </div>
-                                <div class="tp-cards">
-                                    <div class="tp-card"></div>
-                                    <div class="tp-card"></div>
+                                    <div class="tp-lines"><div class="tp-line tp-line-lg"></div><div class="tp-line tp-line-md"></div></div>
                                 </div>
                             </div>
                             <div class="template-info">
-                                <span class="template-name">Developer</span>
-                                <span class="template-desc">Terminal aesthetic</span>
+                                <span class="template-name">Minimal Developer</span>
+                                <span class="template-desc">Clean dark & monospace style for software devs</span>
                             </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'software_engineer' %}selected{% endif %}" data-template="software_engineer">
+                            <div class="template-preview tp-starter">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines"><div class="tp-line tp-line-lg"></div><div class="tp-line tp-line-sm"></div></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Software Engineer</span>
+                                <span class="template-desc">Enterprise tech polish with metrics & timeline</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'ai_engineer' %}selected{% endif %}" data-template="ai_engineer">
+                            <div class="template-preview tp-aurora">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero">
+                                    <div class="tp-lines"><div class="tp-line tp-line-lg"></div></div>
+                                </div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">AI Engineer</span>
+                                <span class="template-desc">Neon cyber aesthetic for ML/AI engineers</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'student_portfolio' %}selected{% endif %}" data-template="student_portfolio">
+                            <div class="template-preview tp-elegant">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero"><div class="tp-lines"><div class="tp-line tp-line-md"></div></div></div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Student Portfolio</span>
+                                <span class="template-desc">Academic layout with CGPA & coursework focus</span>
+                            </div>
+                        </div>
+
+                        <div class="template-card {% if portfolio.template == 'creative_portfolio' %}selected{% endif %}" data-template="creative_portfolio">
+                            <div class="template-preview tp-splash">
+                                <div class="tp-nav"></div>
+                                <div class="tp-hero"><div class="tp-lines"><div class="tp-line tp-line-lg"></div></div></div>
+                            </div>
+                            <div class="template-info">
+                                <span class="template-name">Creative Portfolio</span>
+                                <span class="template-desc">Glassmorphic vibrant design with animations</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-palette"></i> Customization Options</h2>
+                    </div>
+
+                    <div class="input-group">
+                        <label><i class="fa-solid fa-droplet"></i> Accent Color Preset</label>
+                        <div class="color-presets">
+                            <button type="button" class="color-swatch" style="background:#6366f1;" onclick="setAccentColor('#6366f1')"></button>
+                            <button type="button" class="color-swatch" style="background:#2563eb;" onclick="setAccentColor('#2563eb')"></button>
+                            <button type="button" class="color-swatch" style="background:#059669;" onclick="setAccentColor('#059669')"></button>
+                            <button type="button" class="color-swatch" style="background:#8b5cf6;" onclick="setAccentColor('#8b5cf6')"></button>
+                            <button type="button" class="color-swatch" style="background:#ec4899;" onclick="setAccentColor('#ec4899')"></button>
+                            <button type="button" class="color-swatch" style="background:#f59e0b;" onclick="setAccentColor('#f59e0b')"></button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="select-font"><i class="fa-solid fa-font"></i> Typography / Font Family</label>
+                        <select id="select-font" onchange="document.getElementById('input-font-family').value=this.value;">
+                            <option value="Inter" {% if portfolio.font_family == 'Inter' %}selected{% endif %}>Inter (Modern Clean)</option>
+                            <option value="Outfit" {% if portfolio.font_family == 'Outfit' %}selected{% endif %}>Outfit (Creative)</option>
+                            <option value="Fira Code" {% if portfolio.font_family == 'Fira Code' %}selected{% endif %}>Fira Code (Developer Monospace)</option>
+                            <option value="Plus Jakarta Sans" {% if portfolio.font_family == 'Plus Jakarta Sans' %}selected{% endif %}>Plus Jakarta Sans (Academic)</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- ═══════ AI & RESUME TAB ═══════ -->
+                <section class="form-section" id="section-ai" style="display:none;">
+                    <div class="section-header">
+                        <h2><i class="fa-solid fa-file-pdf"></i> Resume PDF Import</h2>
+                        <p class="section-desc">Upload your PDF resume to auto-fill portfolio sections</p>
+                    </div>
+
+                    <div class="resume-dropzone" id="resume-dropzone">
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                        <div class="dropzone-title">Upload Resume PDF</div>
+                        <div class="dropzone-hint">Drag & drop your resume PDF here or click to browse</div>
+                        <input type="file" id="resume-file-input" accept=".pdf" style="display:none;">
+                        <button type="button" class="btn-primary btn-sm" onclick="document.getElementById('resume-file-input').click()"><i class="fa-solid fa-folder-open"></i> Select PDF File</button>
+                    </div>
+
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> AI Content Generator</h2>
+                    </div>
+
+                    <div class="ai-box-tool">
+                        <div class="input-group">
+                            <label>Content Type</label>
+                            <select id="ai-tool-type">
+                                <option value="project_desc">Project Description</option>
+                                <option value="intro">Professional Headline / Intro</option>
+                                <option value="about">About / Bio Section</option>
+                                <option value="resume_summary">Resume Professional Summary</option>
+                                <option value="skills_suggestion">Skills Suggestion</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Short Input Prompt</label>
+                            <input type="text" id="ai-tool-prompt" placeholder="e.g. Created Flutter food delivery app with API and Firebase auth">
+                        </div>
+                        <button type="button" class="btn-primary btn-full" id="btn-generate-ai-tool"><i class="fa-solid fa-sparkles"></i> Generate AI Content</button>
+
+                        <div class="ai-result-box" id="ai-result-box" style="display:none; margin-top:1rem;">
+                            <label>Generated Result:</label>
+                            <textarea id="ai-result-text" rows="4" readonly></textarea>
+                            <button type="button" class="btn-secondary btn-sm" onclick="copyAiResult()"><i class="fa-solid fa-copy"></i> Copy Result</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- ═══════ SETTINGS TAB ═══════ -->
-                <section class="form-section" id="section-settings" style="display:none;">
+                <!-- ═══════ EXPORT & DEPLOY TAB ═══════ -->
+                <section class="form-section" id="section-export" style="display:none;">
                     <div class="section-header">
-                        <h2><i class="fa-solid fa-circle-info"></i> Portfolio Status</h2>
-                    </div>
-                    <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label">Status</span>
-                            <span class="status-badge status-live"><i class="fa-solid fa-circle"></i> Live</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Public URL</span>
-                            <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="info-link">
-                                /p/{{ portfolio.custom_url|default:request.user.username }}/
-                            </a>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Template</span>
-                            <span class="info-value">{{ portfolio.get_template_display|default:"Starter" }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Projects</span>
-                            <span class="info-value">{{ projects.count }} project{{ projects.count|pluralize }}</span>
-                        </div>
+                        <h2><i class="fa-solid fa-download"></i> Export Options</h2>
                     </div>
 
-                    <div class="section-header" style="margin-top: 2rem;">
-                        <h2><i class="fa-solid fa-download"></i> Export</h2>
-                    </div>
                     <div class="export-grid">
+                        <a href="{% url 'export_portfolio_zip' %}" class="export-card">
+                            <i class="fa-solid fa-file-zipper export-icon"></i>
+                            <span class="export-title">Download HTML/CSS ZIP</span>
+                            <span class="export-desc">Static bundle ready to host anywhere</span>
+                        </a>
                         <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="export-card">
-                            <i class="fa-solid fa-globe"></i>
-                            <span class="export-title">View Website</span>
-                            <span class="export-desc">Open in browser</span>
+                            <i class="fa-solid fa-globe export-icon"></i>
+                            <span class="export-title">Shareable Web Link</span>
+                            <span class="export-desc">/p/{{ portfolio.custom_url|default:request.user.username }}/</span>
                         </a>
-                        <a href="{% url 'download_pdf' %}" class="export-card">
-                            <i class="fa-solid fa-file-pdf"></i>
-                            <span class="export-title">Download PDF</span>
-                            <span class="export-desc">Save as PDF file</span>
-                        </a>
+                    </div>
+
+                    <div class="section-header" style="margin-top: 2.5rem;">
+                        <h2><i class="fa-solid fa-rocket"></i> Deployment Support</h2>
+                    </div>
+
+                    <div class="deploy-steps">
+                        <div class="deploy-step-card">
+                            <div class="step-num">1</div>
+                            <div>
+                                <h4>GitHub Pages</h4>
+                                <p>Create a repository named <code>username.github.io</code> and upload the unzipped <code>index.html</code> file.</p>
+                            </div>
+                        </div>
+                        <div class="deploy-step-card">
+                            <div class="step-num">2</div>
+                            <div>
+                                <h4>Netlify</h4>
+                                <p>Drag and drop your exported ZIP folder directly into Netlify App Sites dashboard.</p>
+                            </div>
+                        </div>
+                        <div class="deploy-step-card">
+                            <div class="step-num">3</div>
+                            <div>
+                                <h4>Vercel</h4>
+                                <p>Run <code>vercel</code> CLI inside exported directory or import repo directly in Vercel Dashboard.</p>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </form>
 
-            <!-- ═══════ PROJECTS TAB (outside main form) ═══════ -->
+            <!-- ═══════ PROJECTS TAB (OUTSIDE MAIN FORM) ═══════ -->
             <section class="form-section" id="section-projects" style="display:none;">
                 <div class="form-container">
-                    <div class="section-header">
+                    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <h2><i class="fa-solid fa-plus-circle"></i> <span id="project-form-title">Add New Project</span></h2>
+                        <button type="button" class="btn-ghost btn-sm" onclick="importGithubProjects()"><i class="fa-brands fa-github"></i> Import Repos from GitHub</button>
                     </div>
 
                     <form method="POST" action="{% url 'add_project' %}" enctype="multipart/form-data" id="project-form">
                         {% csrf_token %}
                         <div class="input-group">
                             <label for="project-title"><i class="fa-solid fa-bookmark"></i> Project Title</label>
-                            <input type="text" name="project_title" id="project-title" placeholder="e.g. E-Commerce Dashboard" required>
+                            <input type="text" name="project_title" id="project-title" placeholder="e.g. AI Image Generator" required>
                         </div>
                         <div class="input-group">
                             <label for="project-desc"><i class="fa-solid fa-align-left"></i> Description</label>
-                            <textarea name="project_description" id="project-desc" rows="3" placeholder="Brief description of the project..."></textarea>
+                            <textarea name="project_description" id="project-desc" rows="3" placeholder="Describe key features, stack, and results..."></textarea>
+                        </div>
+                        <div class="input-grid-2">
+                            <div class="input-group">
+                                <label for="project-github-link"><i class="fa-brands fa-github"></i> GitHub Link</label>
+                                <input type="url" name="project_github_link" id="project-github-link" placeholder="https://github.com/...">
+                            </div>
+                            <div class="input-group">
+                                <label for="project-demo-link"><i class="fa-solid fa-laptop"></i> Live Demo Link</label>
+                                <input type="url" name="project_demo_link" id="project-demo-link" placeholder="https://mydemo.app">
+                            </div>
                         </div>
                         <div class="input-group">
-                            <label for="project-link"><i class="fa-solid fa-link"></i> Project URL</label>
-                            <input type="url" name="project_link" id="project-link" placeholder="https://github.com/...">
-                        </div>
-                        <div class="input-group">
-                            <label for="project-tags"><i class="fa-solid fa-tags"></i> Tech Tags <span class="label-hint">(comma-separated)</span></label>
-                            <input type="text" name="project_tags" id="project-tags" placeholder="e.g. React, Node.js, MongoDB">
+                            <label for="project-tags"><i class="fa-solid fa-tags"></i> Technology Stack <span class="label-hint">(comma-separated)</span></label>
+                            <input type="text" name="project_tags" id="project-tags" placeholder="e.g. Flutter, Firebase, Python">
                         </div>
                         <div class="input-group">
                             <label for="project-image"><i class="fa-solid fa-image"></i> Project Image</label>
                             <input type="file" name="project_image" id="project-image" accept="image/*" class="file-input">
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div class="checkbox-group">
+                            <input type="checkbox" name="is_featured" id="project-featured">
+                            <label for="project-featured">Feature this project on main showcase</label>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top:1rem;">
                             <button type="submit" class="btn-primary btn-full" id="btn-submit-project"><i class="fa-solid fa-plus"></i> Add Project</button>
-                            <button type="button" class="btn-ghost btn-full" id="btn-cancel-edit" style="display: none; border: 1.5px solid var(--slate-200); border-radius: 8px;" onclick="cancelEditProject()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                            <button type="button" class="btn-ghost btn-full" id="btn-cancel-edit" style="display: none;" onclick="cancelEditProject()"><i class="fa-solid fa-xmark"></i> Cancel</button>
                         </div>
                     </form>
 
-                    <!-- Existing Projects -->
                     {% if projects %}
                     <div class="section-header" style="margin-top: 2rem;">
-                        <h2><i class="fa-solid fa-layer-group"></i> Your Projects ({{ projects.count }})</h2>
+                        <h2><i class="fa-solid fa-layer-group"></i> Existing Projects ({{ projects.count }})</h2>
                     </div>
                     <div class="project-list">
                         {% for project in projects %}
@@ -374,12 +587,10 @@
                                 {% if project.image %}
                                 <img src="{{ project.image.url }}" alt="{{ project.title }}" class="project-list-thumb">
                                 {% else %}
-                                <div class="project-list-thumb project-list-thumb-empty">
-                                    <i class="fa-solid fa-image"></i>
-                                </div>
+                                <div class="project-list-thumb project-list-thumb-empty"><i class="fa-solid fa-code"></i></div>
                                 {% endif %}
                                 <div>
-                                    <div class="project-list-name">{{ project.title }}</div>
+                                    <div class="project-list-name">{{ project.title }} {% if project.is_featured %}<span class="badge-featured">Featured</span>{% endif %}</div>
                                     {% if project.technology_tags %}
                                     <div class="project-list-tags">{{ project.technology_tags }}</div>
                                     {% endif %}
@@ -387,14 +598,12 @@
                             </div>
                             <div class="project-actions">
                                 <button type="button" class="btn-action btn-action-edit"
-                                    onclick="editProject('{{ project.id }}', '{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.link|escapejs }}', '{{ project.technology_tags|escapejs }}', '{% url 'edit_project' project.id %}')"
-                                    title="Edit project">
-                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                    onclick="editProject('{{ project.id }}', '{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.github_link|escapejs }}', '{{ project.demo_link|escapejs }}', '{{ project.technology_tags|escapejs }}', '{% url 'edit_project' project.id %}')">
+                                    <i class="fa-solid fa-pen"></i> Edit
                                 </button>
                                 <button type="button" class="btn-action btn-action-delete"
-                                    onclick="confirmDeleteProject('{{ project.id }}', '{{ project.title|escapejs }}')"
-                                    title="Delete project">
-                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                    onclick="confirmDeleteProject('{{ project.id }}', '{{ project.title|escapejs }}')">
+                                    <i class="fa-solid fa-trash"></i> Delete
                                 </button>
                                 <form method="POST" action="{% url 'delete_project' project.id %}" id="delete-form-{{ project.id }}" style="display:none;">
                                     {% csrf_token %}
@@ -408,11 +617,9 @@
             </section>
         </aside>
 
-
-
-        <!-- ═══════ PREVIEW AREA ═══════ -->
+        <!-- ═══════ LIVE PREVIEW AREA ═══════ -->
         <section class="preview-area">
-            <div id="browser-window" class="browser-window">
+            <div class="preview-browser">
                 <div class="browser-header">
                     <div class="browser-dots">
                         <span class="dot red"></span>
@@ -423,79 +630,59 @@
                         <i class="fa-solid fa-lock"></i>
                         <span id="preview-url">{{ portfolio.custom_url|default:request.user.username }}.profolio.me</span>
                     </div>
+                    <a href="/p/{{ portfolio.custom_url|default:request.user.username }}/" target="_blank" class="browser-open-btn" title="Open in new tab">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
                 </div>
-                <div class="browser-content" id="preview-content">
-                    <!-- Preview Nav -->
-                    <nav class="preview-nav">
-                        <div id="preview-logo" class="preview-logo">{{ portfolio.user.get_full_name|default:portfolio.user.username }}.</div>
-                        <ul>
-                            <li>About</li>
-                            <li>Projects</li>
-                            <li>Contact</li>
-                        </ul>
-                    </nav>
-
-                    <!-- Preview Hero -->
-                    <div class="preview-hero">
-                        <div class="preview-hero-text">
-                            <p class="greeting">Hi there, I'm</p>
-                            <h1 id="preview-title" class="name">{{ portfolio.title|default:"Your Name & Title" }}</h1>
-                            <p id="preview-tagline" class="tagline-preview">{{ portfolio.tagline|default:"Your tagline goes here" }}</p>
-                            <p id="preview-bio" class="bio">{{ portfolio.bio|default:"Write a short introduction about yourself." }}</p>
-                            <div class="preview-social">
-                                <a id="preview-github" href="{{ portfolio.github_link|default:'#' }}"><i class="fa-brands fa-github"></i></a>
-                                <a id="preview-linkedin" href="{{ portfolio.linkedin_link|default:'#' }}"><i class="fa-brands fa-linkedin-in"></i></a>
-                                <span id="preview-email-icon" style="{% if not portfolio.email %}display:none;{% endif %}"><a href="mailto:{{ portfolio.email }}"><i class="fa-solid fa-envelope"></i></a></span>
-                            </div>
-                        </div>
-                        <div class="preview-photo">
-                            <img id="preview-image" src="{% if portfolio.profile_image %}{{ portfolio.profile_image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E{% endif %}" alt="Profile">
-                        </div>
-                    </div>
-
-                    <!-- Preview Skills -->
-                    <div class="preview-skills" id="preview-skills" style="{% if not portfolio.skills %}display:none;{% endif %}">
-                        <h3>Skills</h3>
-                        <div class="preview-skills-list" id="preview-skills-list">
-                            {% for skill in portfolio.skills_list %}
-                            <span class="preview-skill-tag">{{ skill }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- Preview Projects -->
-                    <div class="preview-projects">
-                        <h3>Projects</h3>
-                        <div class="preview-projects-grid">
-                            {% for project in projects %}
-                            <div class="preview-project-card">
-                                <div class="preview-project-img">
-                                    {% if project.image %}<img src="{{ project.image.url }}" alt="{{ project.title }}">{% endif %}
-                                </div>
-                                <div class="preview-project-info">
-                                    <h4>{{ project.title }}</h4>
-                                    <p>{{ project.description|truncatewords:12 }}</p>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <p class="preview-empty">Add projects to see them here</p>
-                            {% endfor %}
-                        </div>
-                    </div>
+                <div class="iframe-wrapper">
+                    <iframe id="preview-iframe" src="/p/{{ portfolio.custom_url|default:request.user.username }}/" title="Portfolio Live Preview"></iframe>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- ═══════ DELETE CONFIRMATION MODAL ═══════ -->
+    <!-- DELETE CONFIRMATION MODAL -->
     <div class="modal-overlay" id="delete-modal-overlay">
         <div class="modal-box">
             <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <h3 class="modal-title">Delete Project?</h3>
-            <p class="modal-desc" id="modal-project-name">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <p class="modal-desc" id="modal-project-name">Are you sure you want to delete this project?</p>
             <div class="modal-actions">
                 <button type="button" class="btn-modal-cancel" onclick="closeDeleteModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
                 <button type="button" class="btn-modal-confirm" id="btn-confirm-delete"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI ASSISTANT MODAL -->
+    <div class="modal-overlay" id="ai-modal-overlay">
+        <div class="modal-box modal-wide">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Assistant</h3>
+                <button type="button" class="btn-close" onclick="closeAiModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.9rem; color:var(--slate-500); margin-bottom:1rem;">Generate high-impact content for your portfolio in seconds.</p>
+                <div class="input-group">
+                    <label>Task Type</label>
+                    <select id="modal-ai-type">
+                        <option value="project_desc">Project Description</option>
+                        <option value="intro">Headline & Professional Intro</option>
+                        <option value="about">About / Bio Section</option>
+                        <option value="resume_summary">Resume Summary</option>
+                        <option value="skills_suggestion">Skills Suggestion</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Prompt / Keywords</label>
+                    <input type="text" id="modal-ai-prompt" placeholder="e.g. Created Flutter app with Firebase auth and Stripe payments">
+                </div>
+                <button type="button" class="btn-primary btn-full" id="btn-modal-ai-submit"><i class="fa-solid fa-sparkles"></i> Generate Text</button>
+                <div class="ai-result-box" id="modal-ai-result-wrap" style="display:none; margin-top:1rem;">
+                    <label>Output:</label>
+                    <textarea id="modal-ai-result" rows="4"></textarea>
+                    <button type="button" class="btn-secondary btn-sm" onclick="useModalAiResult()"><i class="fa-solid fa-check"></i> Apply to Active Field</button>
+                </div>
             </div>
         </div>
     </div>

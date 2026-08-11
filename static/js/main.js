@@ -1,81 +1,124 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     // ═══════ ELEMENT REFERENCES ═══════
     const inputTitle = document.getElementById('input-title');
+    const inputProfessionalTitle = document.getElementById('input-professional-title');
     const inputTagline = document.getElementById('input-tagline');
     const inputBio = document.getElementById('input-bio');
     const inputSkills = document.getElementById('input-skills');
-    const inputEmail = document.getElementById('input-email');
-    const inputGithub = document.getElementById('input-github');
-    const inputLinkedin = document.getElementById('input-linkedin');
     const inputTemplate = document.getElementById('input-template');
+    const inputAccentColor = document.getElementById('input-accent-color');
     const inputProfileImage = document.getElementById('input-profile-image');
-
-    const previewTitle = document.getElementById('preview-title');
-    const previewTagline = document.getElementById('preview-tagline');
-    const previewBio = document.getElementById('preview-bio');
-    const previewImage = document.getElementById('preview-image');
-    const previewGithub = document.getElementById('preview-github');
-    const previewLinkedin = document.getElementById('preview-linkedin');
-    const previewEmailIcon = document.getElementById('preview-email-icon');
-    const previewSkills = document.getElementById('preview-skills');
-    const previewSkillsList = document.getElementById('preview-skills-list');
 
     const btnSaveDraft = document.getElementById('btn-save-draft');
     const portfolioForm = document.getElementById('portfolio-form');
     const filePreviewImg = document.getElementById('file-preview-img');
+    const previewIframe = document.getElementById('preview-iframe');
+    const browserWindow = document.getElementById('browser-window');
 
-    // ═══════ LIVE TEXT PREVIEW ═══════
-    function setupLivePreview(input, preview, defaultText, property) {
-        property = property || 'textContent';
-        if (!input || !preview) return;
-        input.addEventListener('input', function() {
-            var val = input.value.trim();
-            if (property === 'textContent') {
-                preview.textContent = val || defaultText;
-            } else if (property === 'href') {
-                preview.href = val || '#';
+    // ═══════ DEVICE SWITCHER (DESKTOP, TABLET, MOBILE) ═══════
+    const deviceBtns = document.querySelectorAll('.device-btn');
+    deviceBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            deviceBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const device = this.getAttribute('data-device');
+            if (browserWindow) {
+                browserWindow.className = 'browser-window device-' + device;
             }
         });
-    }
+    });
 
-    setupLivePreview(inputTitle, previewTitle, 'Your Name & Title');
-    setupLivePreview(inputTagline, previewTagline, 'Your tagline goes here');
-    setupLivePreview(inputBio, previewBio, 'Write a short introduction about yourself.');
-    setupLivePreview(inputGithub, previewGithub, '#', 'href');
-    setupLivePreview(inputLinkedin, previewLinkedin, '#', 'href');
+    // ═══════ TABS NAVIGATION ═══════
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.form-section');
+    const activeTabInput = document.getElementById('active_tab');
 
-    // Skills live preview
-    if (inputSkills && previewSkills && previewSkillsList) {
-        inputSkills.addEventListener('input', function() {
-            var val = inputSkills.value.trim();
-            if (val) {
-                previewSkills.style.display = 'block';
-                var skills = val.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
-                previewSkillsList.innerHTML = skills.map(function(s) {
-                    return '<span class="preview-skill-tag">' + s + '</span>';
-                }).join('');
-            } else {
-                previewSkills.style.display = 'none';
-                previewSkillsList.innerHTML = '';
-            }
+    window.activateTab = function (targetId) {
+        tabs.forEach(t => t.classList.remove('active'));
+        sections.forEach(s => s.style.display = 'none');
+        const targetTab = document.querySelector('.tab[data-target="' + targetId + '"]');
+        const targetSection = document.getElementById(targetId);
+        if (targetTab) targetTab.classList.add('active');
+        if (targetSection) targetSection.style.display = 'block';
+
+        if (activeTabInput) {
+            const map = {
+                'section-content': 'content',
+                'section-projects': 'projects',
+                'section-design': 'design',
+                'section-export': 'export'
+            };
+            activeTabInput.value = map[targetId] || 'content';
+        }
+    };
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function () {
+            activateTab(this.getAttribute('data-target'));
         });
+    });
+
+    // Auto-open tab from URL ?tab=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+        const tabMap = {
+            'projects': 'section-projects',
+            'content': 'section-content',
+            'design': 'section-design',
+            'export': 'section-export',
+            'settings': 'section-export'
+        };
+        const sectionId = tabMap[tabParam];
+        if (sectionId) {
+            activateTab(sectionId);
+            window.history.replaceState({}, '', window.location.pathname);
+        }
     }
 
-    // Email icon live preview
-    if (inputEmail && previewEmailIcon) {
-        inputEmail.addEventListener('input', function() {
-            previewEmailIcon.style.display = inputEmail.value.trim() ? 'inline' : 'none';
+    // ═══════ TEMPLATE SELECTION ═══════
+    const templateCards = document.querySelectorAll('.template-card');
+
+    function applyTemplatePreview(templateName) {
+        if (inputTemplate) inputTemplate.value = templateName;
+        if (previewIframe && previewIframe.src) {
+            const url = new URL(previewIframe.src, window.location.origin);
+            url.searchParams.set('preview_template', templateName);
+            previewIframe.src = url.pathname + url.search;
+        }
+    }
+
+    window.refreshPreviewIframe = function () {
+        if (previewIframe && previewIframe.src) {
+            const currentSrc = previewIframe.src;
+            previewIframe.src = '';
+            setTimeout(() => { previewIframe.src = currentSrc; }, 50);
+            if (window.showToast) window.showToast('Live preview refreshed', 'info');
+        }
+    };
+
+    templateCards.forEach(card => {
+        card.addEventListener('click', function () {
+            templateCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            const selectedTemplate = this.getAttribute('data-template');
+            applyTemplatePreview(selectedTemplate);
         });
-    }
+    });
 
-    // ═══════ IMAGE PREVIEW ═══════
+    // ═══════ ACCENT COLOR PRESETS ═══════
+    window.setAccentColor = function (colorHex) {
+        if (inputAccentColor) inputAccentColor.value = colorHex;
+        window.showToast('Accent color updated to ' + colorHex, 'success');
+    };
+
+    // ═══════ PROFILE IMAGE PREVIEW ═══════
     if (inputProfileImage) {
-        inputProfileImage.addEventListener('change', function() {
-            var file = this.files[0];
+        inputProfileImage.addEventListener('change', function () {
+            const file = this.files[0];
             if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    if (previewImage) previewImage.src = e.target.result;
+                const reader = new FileReader();
+                reader.onload = function (e) {
                     if (filePreviewImg) filePreviewImg.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
@@ -83,224 +126,384 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // ═══════ TABS ═══════
-    var tabs = document.querySelectorAll('.tab');
-    var sections = document.querySelectorAll('.form-section');
-
-    function activateTab(targetId) {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        sections.forEach(function(s) { s.style.display = 'none'; });
-        var targetTab = document.querySelector('.tab[data-target="' + targetId + '"]');
-        var targetSection = document.getElementById(targetId);
-        if (targetTab) targetTab.classList.add('active');
-        if (targetSection) targetSection.style.display = 'block';
-    }
-
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            activateTab(this.getAttribute('data-target'));
-        });
-    });
-
-    // Auto-open tab from URL ?tab=projects (after project save/delete/edit)
-    var urlParams = new URLSearchParams(window.location.search);
-    var tabParam = urlParams.get('tab');
-    if (tabParam) {
-        var tabMap = {
-            'projects': 'section-projects',
-            'content': 'section-content',
-            'design': 'section-design',
-            'settings': 'section-settings'
-        };
-        var sectionId = tabMap[tabParam];
-        if (sectionId) {
-            activateTab(sectionId);
-            // Clean URL without reloading
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-    }
-
-    // ═══════ TEMPLATE SELECTION ═══════
-    var templateCards = document.querySelectorAll('.template-card');
-    var browserWindow = document.getElementById('browser-window');
-
-    function applyTemplatePreview(templateName) {
-        if (browserWindow) {
-            browserWindow.setAttribute('data-template', templateName);
-        }
-        
-        // Update View Website links dynamically
-        var viewLinks = document.querySelectorAll('a.dropdown-item[href^="/p/"], a.export-card[href^="/p/"]');
-        viewLinks.forEach(function(link) {
-            var url = new URL(link.href, window.location.origin);
-            url.searchParams.set('preview_template', templateName);
-            link.href = url.pathname + url.search;
-        });
-    }
-
-    templateCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            templateCards.forEach(function(c) { c.classList.remove('selected'); });
-            this.classList.add('selected');
-            var selectedTemplate = this.getAttribute('data-template');
-            if (inputTemplate) inputTemplate.value = selectedTemplate;
-            applyTemplatePreview(selectedTemplate);
-        });
-    });
-
-    if (inputTemplate && inputTemplate.value) {
-        applyTemplatePreview(inputTemplate.value);
-    }
-
     // ═══════ DROPDOWN ═══════
-    var dropdown = document.getElementById('view-live-dropdown');
-    var btnViewLive = document.getElementById('btn-view-live');
-
+    const dropdown = document.getElementById('view-live-dropdown');
+    const btnViewLive = document.getElementById('btn-view-live');
     if (btnViewLive && dropdown) {
-        btnViewLive.addEventListener('click', function(e) {
+        btnViewLive.addEventListener('click', function (e) {
             e.stopPropagation();
             dropdown.classList.toggle('open');
         });
-        document.addEventListener('click', function(e) {
-            if (!dropdown.contains(e.target)) {
-                dropdown.classList.remove('open');
-            }
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
         });
     }
 
     // ═══════ SAVE BUTTON ═══════
     if (btnSaveDraft && portfolioForm) {
-        btnSaveDraft.addEventListener('click', function() {
+        btnSaveDraft.addEventListener('click', function () {
             this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
             this.disabled = true;
             portfolioForm.submit();
         });
     }
 
-    // ═══════ AUTO-DISMISS TOASTS ═══════
-    var toasts = document.querySelectorAll('.toast');
-    toasts.forEach(function(toast) {
-        setTimeout(function() {
+    // ═══════ TOAST NOTIFICATIONS ═══════
+    window.showToast = function (message, type = 'info') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-info'}"></i><span>${message}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+        container.appendChild(toast);
+        setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(function() { toast.remove(); }, 300);
+            setTimeout(() => toast.remove(), 300);
         }, 4000);
-    });
+    };
 
-    // ═══════ DELETE MODAL CONFIRM BUTTON ═══════
-    var confirmDeleteBtn = document.getElementById('btn-confirm-delete');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (window._deleteProjectId) {
-                var deleteForm = document.getElementById('delete-form-' + window._deleteProjectId);
-                if (deleteForm) {
-                    confirmDeleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
-                    confirmDeleteBtn.disabled = true;
-                    deleteForm.submit();
+    // ═══════ RESUME UPLOAD & PARSING ═══════
+    const resumeFileInput = document.getElementById('resume-file-input');
+    const resumeDropzone = document.getElementById('resume-dropzone');
+    const btnResumeModalOpen = document.getElementById('btn-resume-modal-open');
+
+    if (btnResumeModalOpen) {
+        btnResumeModalOpen.addEventListener('click', function () {
+            activateTab('section-ai');
+            if (resumeDropzone) resumeDropzone.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    function uploadResumeFile(file) {
+        if (!file || !file.name.endsWith('.pdf')) {
+            showToast('Please select a valid PDF file.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('resume_pdf', file);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        showToast('Uploading & parsing PDF resume...', 'info');
+
+        fetch('/api/import-resume/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Resume imported! Reloading fields...', 'success');
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    showToast(data.message || 'Failed to parse resume.', 'error');
                 }
-            }
+            })
+            .catch(err => {
+                showToast('Error uploading resume: ' + err.message, 'error');
+            });
+    }
+
+    if (resumeFileInput) {
+        resumeFileInput.addEventListener('change', function () {
+            if (this.files.length > 0) uploadResumeFile(this.files[0]);
         });
     }
 
-    // Close modal when clicking the overlay background
-    var modalOverlay = document.getElementById('delete-modal-overlay');
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', function(e) {
-            if (e.target === modalOverlay) {
-                window.closeDeleteModal();
-            }
+    if (resumeDropzone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            resumeDropzone.addEventListener(eventName, e => { e.preventDefault(); resumeDropzone.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            resumeDropzone.addEventListener(eventName, e => { e.preventDefault(); resumeDropzone.classList.remove('dragover'); });
+        });
+        resumeDropzone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            if (dt.files.length > 0) uploadResumeFile(dt.files[0]);
         });
     }
-});
 
-// ═══════ PROJECT EDITING ═══════
-window.editProject = function(id, title, desc, link, tags, editUrl) {
-    // Switch to projects tab
-    var projectTabBtn = document.querySelector('.tab[data-target="section-projects"]');
-    if (projectTabBtn && !projectTabBtn.classList.contains('active')) {
-        projectTabBtn.click();
+    // ═══════ AI CONTENT GENERATOR ═══════
+    const btnGenerateAiTool = document.getElementById('btn-generate-ai-tool');
+    const aiToolType = document.getElementById('ai-tool-type');
+    const aiToolPrompt = document.getElementById('ai-tool-prompt');
+    const aiResultBox = document.getElementById('ai-result-box');
+    const aiResultText = document.getElementById('ai-result-text');
+
+    if (btnGenerateAiTool) {
+        btnGenerateAiTool.addEventListener('click', function () {
+            const prompt = aiToolPrompt.value.trim();
+            const type = aiToolType.value;
+            if (!prompt) {
+                showToast('Please enter a prompt for AI.', 'error');
+                return;
+            }
+
+            btnGenerateAiTool.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            btnGenerateAiTool.disabled = true;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('/api/generate-ai-content/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ prompt: prompt, type: type })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    btnGenerateAiTool.innerHTML = '<i class="fa-solid fa-sparkles"></i> Generate AI Content';
+                    btnGenerateAiTool.disabled = false;
+                    if (data.status === 'success') {
+                        if (aiResultText) aiResultText.value = data.result;
+                        if (aiResultBox) aiResultBox.style.display = 'block';
+                        showToast('AI content generated!', 'success');
+                    } else {
+                        showToast(data.message || 'Generation failed.', 'error');
+                    }
+                })
+                .catch(err => {
+                    btnGenerateAiTool.innerHTML = '<i class="fa-solid fa-sparkles"></i> Generate AI Content';
+                    btnGenerateAiTool.disabled = false;
+                    showToast('AI Generation error: ' + err.message, 'error');
+                });
+        });
     }
 
-    // Update form action to the edit URL
-    var form = document.getElementById('project-form');
-    if (form) form.action = editUrl;
+    window.copyAiResult = function () {
+        if (aiResultText) {
+            navigator.clipboard.writeText(aiResultText.value);
+            showToast('Result copied to clipboard!', 'success');
+        }
+    };
 
-    // Update section header
-    var formTitle = document.getElementById('project-form-title');
-    if (formTitle) formTitle.textContent = 'Edit Project';
+    // AI Inline Helper
+    window.openAiGeneratorFor = function (type, fieldId) {
+        const field = document.getElementById(fieldId);
+        const currentVal = field ? field.value : '';
+        const prompt = prompt || currentVal || 'Software Developer';
 
-    // Fill the form fields
-    var titleField = document.getElementById('project-title');
-    if (titleField) titleField.value = title;
+        showToast('Generating AI suggestion...', 'info');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    var descField = document.getElementById('project-desc');
-    if (descField) descField.value = desc;
+        fetch('/api/generate-ai-content/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ prompt: prompt, type: type })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && field) {
+                    field.value = data.result;
+                    showToast('Field updated with AI text!', 'success');
+                }
+            });
+    };
 
-    var linkField = document.getElementById('project-link');
-    if (linkField) linkField.value = link;
+    // AI Modal Shortcut
+    const btnAiModalOpen = document.getElementById('btn-ai-modal-open');
+    const aiModalOverlay = document.getElementById('ai-modal-overlay');
+    const btnModalAiSubmit = document.getElementById('btn-modal-ai-submit');
+    const modalAiPrompt = document.getElementById('modal-ai-prompt');
+    const modalAiType = document.getElementById('modal-ai-type');
+    const modalAiResultWrap = document.getElementById('modal-ai-result-wrap');
+    const modalAiResult = document.getElementById('modal-ai-result');
 
-    var tagsField = document.getElementById('project-tags');
-    if (tagsField) tagsField.value = tags;
+    if (btnAiModalOpen && aiModalOverlay) {
+        btnAiModalOpen.addEventListener('click', () => { aiModalOverlay.classList.add('open'); });
+    }
+    window.closeAiModal = function () {
+        if (aiModalOverlay) aiModalOverlay.classList.remove('open');
+    };
 
-    // Update submit button
-    var btnSubmit = document.getElementById('btn-submit-project');
-    if (btnSubmit) {
-        btnSubmit.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Update Project';
-        btnSubmit.style.background = 'linear-gradient(135deg, #059669, #047857)';
-        btnSubmit.style.boxShadow = '0 2px 8px rgba(5,150,105,0.3)';
+    if (btnModalAiSubmit) {
+        btnModalAiSubmit.addEventListener('click', function () {
+            const prompt = modalAiPrompt.value.trim();
+            const type = modalAiType.value;
+            if (!prompt) return showToast('Prompt is required.', 'error');
+
+            btnModalAiSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            btnModalAiSubmit.disabled = true;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('/api/generate-ai-content/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ prompt: prompt, type: type })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    btnModalAiSubmit.innerHTML = '<i class="fa-solid fa-sparkles"></i> Generate Text';
+                    btnModalAiSubmit.disabled = false;
+                    if (data.status === 'success') {
+                        modalAiResult.value = data.result;
+                        modalAiResultWrap.style.display = 'block';
+                    }
+                });
+        });
     }
 
-    // Show cancel button
-    var btnCancel = document.getElementById('btn-cancel-edit');
-    if (btnCancel) btnCancel.style.display = 'flex';
+    // ═══════ GITHUB REPO AUTO-IMPORT ═══════
+    window.importGithubProjects = function () {
+        const username = prompt('Enter your GitHub Username (or leave blank to use saved link):');
+        showToast('Fetching repositories from GitHub...', 'info');
 
-    // Scroll to form
-    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch('/api/import-github-repos/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ username: username || '' })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    showToast(data.message || 'GitHub import failed.', 'error');
+                }
+            })
+            .catch(err => showToast('GitHub API Error: ' + err.message, 'error'));
+    };
 
-window.cancelEditProject = function() {
-    var form = document.getElementById('project-form');
-    if (form) {
-        form.reset();
-        // Reset action to the add endpoint
-        form.action = '/add-project/';
-    }
+    // ═══════ SUB-FORM SUBMISSIONS (EDUCATION, EXPERIENCE, CERTIFICATES) ═══════
+    window.submitEducation = function () {
+        const degree = document.getElementById('edu-degree').value.trim();
+        const college = document.getElementById('edu-college').value.trim();
+        const year = document.getElementById('edu-year').value.trim();
+        const cgpa = document.getElementById('edu-cgpa').value.trim();
 
-    var formTitle = document.getElementById('project-form-title');
-    if (formTitle) formTitle.textContent = 'Add New Project';
+        if (!degree || !college) return showToast('Degree and College are required.', 'error');
 
-    var btnSubmit = document.getElementById('btn-submit-project');
-    if (btnSubmit) {
-        btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Add Project';
-        btnSubmit.style.background = '';
-        btnSubmit.style.boxShadow = '';
-    }
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('degree', degree);
+        formData.append('college', college);
+        formData.append('year', year);
+        formData.append('cgpa', cgpa);
 
-    var btnCancel = document.getElementById('btn-cancel-edit');
-    if (btnCancel) btnCancel.style.display = 'none';
-};
+        fetch('/add-education/', { method: 'POST', headers: { 'X-CSRFToken': csrfToken }, body: formData })
+            .then(() => window.location.reload());
+    };
 
-// ═══════ DELETE MODAL ═══════
-window._deleteProjectId = null;
+    window.submitExperience = function () {
+        const company = document.getElementById('exp-company').value.trim();
+        const role = document.getElementById('exp-role').value.trim();
+        const duration = document.getElementById('exp-duration').value.trim();
+        const description = document.getElementById('exp-description').value.trim();
 
-window.confirmDeleteProject = function(projectId, projectTitle) {
-    window._deleteProjectId = projectId;
-    var modal = document.getElementById('delete-modal-overlay');
-    var desc = document.getElementById('modal-project-name');
-    if (desc) {
-        desc.textContent = 'Are you sure you want to delete "' + projectTitle + '"? This action cannot be undone.';
-    }
-    if (modal) {
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-};
+        if (!company || !role) return showToast('Company and Role are required.', 'error');
 
-window.closeDeleteModal = function() {
-    var modal = document.getElementById('delete-modal-overlay');
-    if (modal) {
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-    }
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('company', company);
+        formData.append('role', role);
+        formData.append('duration', duration);
+        formData.append('description', description);
+
+        fetch('/add-experience/', { method: 'POST', headers: { 'X-CSRFToken': csrfToken }, body: formData })
+            .then(() => window.location.reload());
+    };
+
+    window.submitCertificate = function () {
+        const name = document.getElementById('cert-name').value.trim();
+        const organization = document.getElementById('cert-org').value.trim();
+        const year = document.getElementById('cert-year').value.trim();
+        const link = document.getElementById('cert-link').value.trim();
+
+        if (!name || !organization) return showToast('Certificate name and organization are required.', 'error');
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('organization', organization);
+        formData.append('year', year);
+        formData.append('link', link);
+
+        fetch('/add-certificate/', { method: 'POST', headers: { 'X-CSRFToken': csrfToken }, body: formData })
+            .then(() => window.location.reload());
+    };
+
+    // ═══════ DELETE MODAL ═══════
     window._deleteProjectId = null;
-};
+    window.confirmDeleteProject = function (projectId, projectTitle) {
+        window._deleteProjectId = projectId;
+        const modal = document.getElementById('delete-modal-overlay');
+        const desc = document.getElementById('modal-project-name');
+        if (desc) desc.textContent = 'Are you sure you want to delete "' + projectTitle + '"?';
+        if (modal) modal.classList.add('open');
+    };
+
+    window.closeDeleteModal = function () {
+        const modal = document.getElementById('delete-modal-overlay');
+        if (modal) modal.classList.remove('open');
+        window._deleteProjectId = null;
+    };
+
+    const confirmDeleteBtn = document.getElementById('btn-confirm-delete');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function () {
+            if (window._deleteProjectId) {
+                const deleteForm = document.getElementById('delete-form-' + window._deleteProjectId);
+                if (deleteForm) deleteForm.submit();
+            }
+        });
+    }
+
+    // ═══════ PROJECT EDITING ═══════
+    window.editProject = function (id, title, desc, githubLink, demoLink, tags, editUrl) {
+        activateTab('section-projects');
+
+        const form = document.getElementById('project-form');
+        if (form) form.action = editUrl;
+
+        const formTitle = document.getElementById('project-form-title');
+        if (formTitle) formTitle.textContent = 'Edit Project';
+
+        document.getElementById('project-title').value = title;
+        document.getElementById('project-desc').value = desc;
+        if (document.getElementById('project-github-link')) document.getElementById('project-github-link').value = githubLink;
+        if (document.getElementById('project-demo-link')) document.getElementById('project-demo-link').value = demoLink;
+        document.getElementById('project-tags').value = tags;
+
+        const btnSubmit = document.getElementById('btn-submit-project');
+        if (btnSubmit) btnSubmit.innerHTML = '<i class="fa-solid fa-pen"></i> Update Project';
+
+        const btnCancel = document.getElementById('btn-cancel-edit');
+        if (btnCancel) btnCancel.style.display = 'block';
+    };
+
+    window.cancelEditProject = function () {
+        const form = document.getElementById('project-form');
+        if (form) {
+            form.reset();
+            form.action = '/add-project/';
+        }
+        const formTitle = document.getElementById('project-form-title');
+        if (formTitle) formTitle.textContent = 'Add New Project';
+
+        const btnSubmit = document.getElementById('btn-submit-project');
+        if (btnSubmit) btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Add Project';
+
+        const btnCancel = document.getElementById('btn-cancel-edit');
+        if (btnCancel) btnCancel.style.display = 'none';
+    };
+});

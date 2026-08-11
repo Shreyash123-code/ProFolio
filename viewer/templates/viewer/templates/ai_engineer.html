@@ -1,0 +1,276 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.title|default:portfolio.user.username }} — AI Engineer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --a: {{ portfolio.accent_color|default:"#a855f7" }};
+            --a2: color-mix(in srgb, {{ portfolio.accent_color|default:"#a855f7" }} 60%, #06b6d4);
+            --glow: color-mix(in srgb, {{ portfolio.accent_color|default:"#a855f7" }} 25%, transparent);
+            --bg: #050509;
+            --card: rgba(255,255,255,0.035);
+            --border: rgba(255,255,255,0.08);
+            --text: #f0f0ff;
+            --muted: #7a7a9a;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        html{scroll-behavior:smooth;}
+        body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.7;}
+        a{text-decoration:none;color:inherit;}
+
+        /* Grid bg */
+        body::before{
+            content:'';position:fixed;inset:0;z-index:0;
+            background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+            background-size:50px 50px;
+            mask-image:radial-gradient(ellipse 80% 80% at 50% 0%,black 30%,transparent 100%);
+        }
+        body::after{
+            content:'';position:fixed;inset:0;z-index:0;
+            background:radial-gradient(ellipse 70% 50% at 50% 0%,var(--glow),transparent 70%);
+            pointer-events:none;
+        }
+
+        /* Nav */
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:rgba(5,5,9,0.8);backdrop-filter:blur(20px);}
+        .nav-logo{font-family:var(--mono);font-size:0.9rem;color:var(--a);font-weight:600;}
+        .nav-links{display:flex;gap:2rem;list-style:none;}
+        .nav-links a{font-size:0.8rem;color:var(--muted);font-weight:500;transition:color 0.2s;letter-spacing:0.5px;}
+        .nav-links a:hover{color:var(--a);}
+        .nav-pill{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;padding:0.4rem 1rem;border-radius:6px;font-size:0.8rem;font-weight:600;}
+
+        /* Hero */
+        .hero{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;padding:8rem 2rem 4rem;max-width:1100px;margin:0 auto;}
+        .hero-wrap{width:100%;display:flex;align-items:center;gap:5rem;justify-content:space-between;}
+        .terminal-badge{font-family:var(--mono);font-size:0.75rem;color:var(--muted);margin-bottom:1.5rem;}
+        .terminal-badge .cmd{color:var(--a);}
+        .hero-name{font-size:clamp(2.8rem,6vw,4.5rem);font-weight:700;line-height:1;letter-spacing:-2px;margin-bottom:0.5rem;}
+        .hero-name .grad{background:linear-gradient(135deg,var(--a),var(--a2),#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .hero-role{font-family:var(--mono);font-size:1rem;color:var(--muted);margin-bottom:1.25rem;}
+        .hero-role .accent{color:var(--a);}
+        .hero-bio{font-size:0.95rem;color:var(--muted);max-width:500px;line-height:1.8;margin-bottom:2rem;}
+        .cta-row{display:flex;gap:1rem;flex-wrap:wrap;}
+        .btn-neon{display:inline-flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;padding:0.75rem 1.75rem;border-radius:8px;font-weight:700;font-size:0.9rem;transition:all 0.3s;box-shadow:0 0 20px var(--glow);}
+        .btn-neon:hover{transform:translateY(-2px);box-shadow:0 0 40px var(--glow);}
+        .btn-outline{display:inline-flex;align-items:center;gap:0.5rem;border:1px solid var(--border);color:var(--text);padding:0.75rem 1.75rem;border-radius:8px;font-weight:600;font-size:0.9rem;transition:all 0.2s;background:var(--card);}
+        .btn-outline:hover{border-color:var(--a);color:var(--a);}
+        .social-row{display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap;}
+        .soc{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--muted);border:1px solid var(--border);padding:0.35rem 0.9rem;border-radius:6px;transition:all 0.2s;}
+        .soc:hover{border-color:var(--a);color:var(--a);}
+
+        /* Avatar */
+        .avatar-wrap{position:relative;flex-shrink:0;}
+        .avatar-img{width:210px;height:210px;border-radius:20px;object-fit:cover;position:relative;z-index:1;border:1px solid var(--border);}
+        .avatar-ring{position:absolute;inset:-12px;border-radius:28px;border:1px solid color-mix(in srgb,var(--a) 40%,transparent);animation:rot 8s linear infinite;}
+        .avatar-ring2{position:absolute;inset:-24px;border-radius:40px;border:1px dashed color-mix(in srgb,var(--a) 20%,transparent);animation:rot 12s linear infinite reverse;}
+        @keyframes rot{to{transform:rotate(360deg);}}
+        .avatar-glow{position:absolute;inset:0;border-radius:20px;box-shadow:0 0 40px var(--glow);z-index:0;}
+
+        /* Sections */
+        .container{max-width:1100px;margin:0 auto;padding:0 2rem;position:relative;z-index:1;}
+        .section{padding:5rem 0;}
+        .sec-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:2.5rem;}
+        .sec-head::before{content:attr(data-num);font-family:var(--mono);font-size:0.75rem;color:var(--a);padding:0.2rem 0.5rem;border:1px solid color-mix(in srgb,var(--a) 30%,transparent);border-radius:4px;}
+        .sec-head span{font-size:1.5rem;font-weight:700;letter-spacing:-0.5px;}
+        .sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent);}
+
+        /* Skills */
+        .skills-wrap{display:flex;flex-wrap:wrap;gap:0.65rem;}
+        .skill{display:inline-flex;align-items:center;gap:0.5rem;background:var(--card);border:1px solid var(--border);padding:0.5rem 1rem;border-radius:8px;font-size:0.83rem;font-weight:500;transition:all 0.2s;backdrop-filter:blur(8px);}
+        .skill:hover{border-color:var(--a);color:var(--a);box-shadow:0 0 12px var(--glow);}
+        .skill-dot{width:6px;height:6px;border-radius:50%;background:var(--a);box-shadow:0 0 6px var(--a);}
+
+        /* Projects */
+        .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;}
+        .proj{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.3s;backdrop-filter:blur(10px);}
+        .proj:hover{border-color:color-mix(in srgb,var(--a) 50%,transparent);transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,0.3),0 0 20px var(--glow);}
+        .proj-img{width:100%;height:160px;object-fit:cover;border-bottom:1px solid var(--border);}
+        .proj-body{padding:1.5rem;}
+        .proj-idx{font-family:var(--mono);font-size:0.7rem;color:var(--a);margin-bottom:0.4rem;}
+        .proj-title{font-size:1.05rem;font-weight:700;margin-bottom:0.5rem;}
+        .proj-desc{font-size:0.84rem;color:var(--muted);line-height:1.6;margin-bottom:1rem;}
+        .proj-tags{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1rem;}
+        .ptag{font-family:var(--mono);font-size:0.7rem;background:color-mix(in srgb,var(--a) 12%,transparent);color:var(--a);border:1px solid color-mix(in srgb,var(--a) 25%,transparent);padding:0.15rem 0.5rem;border-radius:4px;}
+        .proj-links{display:flex;gap:1rem;}
+        .plink{font-size:0.8rem;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:0.3rem;transition:color 0.2s;}
+        .plink:hover{color:var(--a);}
+
+        /* Timeline */
+        .tline{display:flex;flex-direction:column;gap:0;}
+        .titem{display:flex;gap:1.75rem;padding-bottom:2.5rem;position:relative;}
+        .titem:not(:last-child)::before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:2px;background:linear-gradient(to bottom,var(--a),transparent);}
+        .tdot{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid var(--a);background:var(--bg);margin-top:2px;box-shadow:0 0 10px var(--glow);}
+        .tcontent{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;transition:border-color 0.2s;}
+        .tcontent:hover{border-color:color-mix(in srgb,var(--a) 30%,transparent);}
+        .trole{font-size:1rem;font-weight:700;margin-bottom:0.2rem;}
+        .tcompany{font-size:0.85rem;color:var(--a);font-weight:600;margin-bottom:0.2rem;}
+        .tdate{font-family:var(--mono);font-size:0.72rem;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:0.2rem 0.6rem;border-radius:4px;display:inline-block;margin-bottom:0.5rem;}
+        .tdesc{font-size:0.84rem;color:var(--muted);}
+
+        /* Contact */
+        .contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+        .ccard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.25s;backdrop-filter:blur(8px);}
+        .ccard:hover{border-color:var(--a);box-shadow:0 0 20px var(--glow);transform:translateY(-4px);}
+        .ccard i{font-size:1.5rem;color:var(--a);margin-bottom:0.5rem;display:block;}
+        .ccard .cl{font-size:0.75rem;color:var(--muted);}
+        .ccard .cv{font-size:0.85rem;font-weight:600;word-break:break-all;}
+
+        footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2rem;text-align:center;font-size:0.8rem;color:var(--muted);}
+        footer span{color:var(--a);}
+
+        .reveal{opacity:0;transform:translateY(24px);transition:0.6s ease;}
+        .reveal.visible{opacity:1;transform:none;}
+
+        @media(max-width:768px){.hero-wrap{flex-direction:column-reverse;text-align:center;}.cta-row,.social-row{justify-content:center;}.avatar-img{width:150px;height:150px;}.avatar-ring,.avatar-ring2{display:none;}}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">{{ portfolio.user.username }}<span style="color:var(--muted);">.ai</span></div>
+    <ul class="nav-links">
+        {% if portfolio.skills %}<li><a href="#skills">Skills</a></li>{% endif %}
+        {% if projects %}<li><a href="#projects">Projects</a></li>{% endif %}
+        {% if experiences %}<li><a href="#experience">Experience</a></li>{% endif %}
+        {% if educations %}<li><a href="#edu">Education</a></li>{% endif %}
+    </ul>
+    {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}" class="nav-pill">Contact</a>{% endif %}
+</nav>
+
+<section class="hero">
+    <div class="hero-wrap">
+        <div>
+            <div class="terminal-badge"><span class="cmd">$</span> whoami <span style="opacity:0.4">→ {{ portfolio.user.username }}</span></div>
+            <h1 class="hero-name"><span class="grad">{{ portfolio.title|default:portfolio.user.username }}</span></h1>
+            <div class="hero-role"><span class="accent">></span> {{ portfolio.professional_title|default:"AI / ML Engineer" }}</div>
+            {% if portfolio.tagline %}<p style="font-size:0.9rem;margin-bottom:1rem;color:var(--muted);font-style:italic;">{{ portfolio.tagline }}</p>{% endif %}
+            <p class="hero-bio">{{ portfolio.bio|default:"Building the future with AI, machine learning, and intelligent systems." }}</p>
+            <div class="cta-row">
+                {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}" class="btn-neon"><i class="fa-solid fa-terminal"></i> Collaborate</a>{% endif %}
+                {% if portfolio.github_link %}<a href="{{ portfolio.github_link }}" target="_blank" class="btn-outline"><i class="fa-brands fa-github"></i> GitHub</a>{% endif %}
+            </div>
+            <div class="social-row">
+                {% if portfolio.linkedin_link %}<a href="{{ portfolio.linkedin_link }}" target="_blank" class="soc"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>{% endif %}
+                {% if portfolio.twitter_link %}<a href="{{ portfolio.twitter_link }}" target="_blank" class="soc"><i class="fa-brands fa-x-twitter"></i> Twitter</a>{% endif %}
+                {% if portfolio.location %}<span class="soc"><i class="fa-solid fa-location-dot"></i> {{ portfolio.location }}</span>{% endif %}
+            </div>
+        </div>
+        {% if portfolio.profile_image %}
+        <div class="avatar-wrap">
+            <div class="avatar-ring"></div>
+            <div class="avatar-ring2"></div>
+            <div class="avatar-glow"></div>
+            <img src="{{ portfolio.profile_image.url }}" class="avatar-img" alt="{{ portfolio.title }}">
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if portfolio.skills %}
+<div class="container">
+    <section class="section reveal" id="skills">
+        <div class="sec-head" data-num="01"><span>Tech Arsenal</span></div>
+        <div class="skills-wrap">
+            {% for skill in portfolio.skills_list %}<span class="skill"><span class="skill-dot"></span>{{ skill }}</span>{% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+{% if projects %}
+<div class="container">
+    <section class="section reveal" id="projects">
+        <div class="sec-head" data-num="02"><span>Projects</span></div>
+        <div class="proj-grid">
+            {% for proj in projects %}
+            <div class="proj reveal">
+                {% if proj.image %}<img src="{{ proj.image.url }}" class="proj-img" alt="{{ proj.title }}">{% endif %}
+                <div class="proj-body">
+                    <div class="proj-idx">project_{{ forloop.counter|stringformat:"02d" }}.py</div>
+                    <h3 class="proj-title">{{ proj.title }}</h3>
+                    <p class="proj-desc">{{ proj.description }}</p>
+                    {% if proj.technology_tags %}<div class="proj-tags">{% for t in proj.tags_list %}<span class="ptag">{{ t }}</span>{% endfor %}</div>{% endif %}
+                    <div class="proj-links">
+                        {% if proj.demo_link or proj.link %}<a href="{{ proj.demo_link|default:proj.link }}" target="_blank" class="plink"><i class="fa-solid fa-rocket"></i> Demo</a>{% endif %}
+                        {% if proj.github_link %}<a href="{{ proj.github_link }}" target="_blank" class="plink"><i class="fa-brands fa-github"></i> Code</a>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+{% if experiences %}
+<div class="container">
+    <section class="section reveal" id="experience">
+        <div class="sec-head" data-num="03"><span>Experience</span></div>
+        <div class="tline">
+            {% for exp in experiences %}
+            <div class="titem reveal">
+                <div class="tdot"></div>
+                <div class="tcontent">
+                    <div class="trole">{{ exp.role }}</div>
+                    <div class="tcompany">{{ exp.company }}</div>
+                    {% if exp.duration %}<div class="tdate">{{ exp.duration }}</div>{% endif %}
+                    {% if exp.description %}<p class="tdesc">{{ exp.description }}</p>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+{% if educations %}
+<div class="container">
+    <section class="section reveal" id="edu">
+        <div class="sec-head" data-num="04"><span>Education</span></div>
+        <div class="tline">
+            {% for edu in educations %}
+            <div class="titem reveal">
+                <div class="tdot"></div>
+                <div class="tcontent">
+                    <div class="trole">{{ edu.degree }}</div>
+                    <div class="tcompany">{{ edu.college }}</div>
+                    {% if edu.year %}<div class="tdate">{{ edu.year }}</div>{% endif %}
+                    {% if edu.cgpa %}<p class="tdesc">CGPA: <strong style="color:var(--a);">{{ edu.cgpa }}</strong></p>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+{% if portfolio.email or portfolio.phone or portfolio.location %}
+<div class="container">
+    <section class="section reveal" id="contact">
+        <div class="sec-head" data-num="05"><span>Contact</span></div>
+        <div class="contact-grid">
+            {% if portfolio.email %}<a href="mailto:{{ portfolio.email }}" class="ccard"><i class="fa-solid fa-envelope"></i><div class="cl">Email</div><div class="cv">{{ portfolio.email }}</div></a>{% endif %}
+            {% if portfolio.phone %}<a href="tel:{{ portfolio.phone }}" class="ccard"><i class="fa-solid fa-phone"></i><div class="cl">Phone</div><div class="cv">{{ portfolio.phone }}</div></a>{% endif %}
+            {% if portfolio.location %}<div class="ccard"><i class="fa-solid fa-location-dot"></i><div class="cl">Location</div><div class="cv">{{ portfolio.location }}</div></div>{% endif %}
+            {% if portfolio.linkedin_link %}<a href="{{ portfolio.linkedin_link }}" target="_blank" class="ccard"><i class="fa-brands fa-linkedin"></i><div class="cl">LinkedIn</div><div class="cv">View Profile</div></a>{% endif %}
+        </div>
+    </section>
+</div>
+{% endif %}
+
+<footer><p>&copy; {% now "Y" %} <span>{{ portfolio.title|default:portfolio.user.username }}</span> · Built with ProFolio</p></footer>
+
+<script>
+const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 70); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
