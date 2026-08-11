@@ -88,6 +88,7 @@ LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
 import cloudinary
 
 cloudinary.config(
@@ -96,6 +97,12 @@ cloudinary.config(
     api_secret=os.environ.get("CLOUDINARY_API_SECRET")
 )
 
-DEFAULT_FILE_STORAGE = (
-    "cloudinary_storage.storage.MediaCloudinaryStorage"
-)
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
