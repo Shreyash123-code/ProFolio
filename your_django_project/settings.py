@@ -3,8 +3,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-dummy-key-for-dev'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG = False
+ALLOWED_HOSTS = ["localhost",
+    "127.0.0.1",
+    ".onrender.com"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -20,6 +22,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -74,3 +77,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'index'
 LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = 'login'
+STATIC_ROOT = BASE_DIR / "staticfiles"
