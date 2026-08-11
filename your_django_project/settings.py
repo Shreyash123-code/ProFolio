@@ -2,7 +2,12 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-dummy-key-for-dev'
+import os
+
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-dummy-key-for-dev"
+)
 DEBUG = False
 ALLOWED_HOSTS = ["localhost",
     "127.0.0.1",
